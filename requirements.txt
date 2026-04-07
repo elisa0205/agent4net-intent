@@ -1,0 +1,7 @@
+langchain
+langchain-core
+langchain-litellm
+litellm<1.82.7
+langchain-ollama
+langgraph
+yamllint
