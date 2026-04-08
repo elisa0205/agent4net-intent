@@ -27,9 +27,9 @@ llm : ChatLiteLLM = ChatLiteLLM(
 SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
 Return ONLY valid Kubernetes YAML.
 No explanations. No markdown fences. No comments.
+If multiple resources are needed, separate them with ---.
 Do not overthink."""
 
-#If multiple resources are needed, separate them with ---.
 
 # Nodes 
 def generator_node(state: AgentState):
@@ -48,21 +48,23 @@ def generator_node(state: AgentState):
 
     response = llm.invoke(message)
 
-    response.pretty_print()
-
-    print(f"\n --- Generated YAML (attempt {state['attempts'] + 1}): ---\n{response.content}\n--- End of YAML ---")
+    print(f"\n --- Generated YAML (attempt {state['attempts'] + 1}): ---\n{response.content}\n--- End of YAML ---\n")
 
     return {"generated_yaml": response.content, "attempts": state['attempts'] + 1}
 
+
 def syntax_validator_node(state: AgentState):
 
-    print("Syntax validator \n")
+    print("Syntax validator")
 
     yaml_code = state['generated_yaml']
     filename = "temp_config.yaml"
-    
+
+    #correct from EOL to LF
+    yaml_code = yaml_code.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
+
     # Write the temporary YAML file
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8", newline="\n") as f:
         f.write(yaml_code)
     
     # parsable is needed because in this way the output is machine-readable 
@@ -81,7 +83,7 @@ def syntax_validator_node(state: AgentState):
         error_message = result.stdout + result.stderr
         os.remove(filename)
 
-        print(f"--- Error detected: {error_message} ---")
+        print(f"--- Error detected---\n {error_message} ---")
         return {"feedback": f"Yamllint Error: {error_message}", "attempts": state['attempts']}
 
 
@@ -98,7 +100,7 @@ workflow = StateGraph(AgentState)
 workflow.add_node("generator", generator_node)
 workflow.add_node("syntax_validator", syntax_validator_node)
 
-workflow.set_entry_point("generator")  # Start with validation to handle the case where the initial YAML is empty or invalid
+workflow.set_entry_point("generator") 
 workflow.add_edge("generator", "syntax_validator")
 workflow.add_conditional_edges("syntax_validator", should_continue)
 
@@ -106,7 +108,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "task": "Create a simple Deployment Manifest for a python app with 3 replicas.",
+    "task": "Create a simple Service ClusterIP Manifest for a app exposing port 8080.",
     "generated_yaml": "",
     "feedback": "",
     "attempts": 0
