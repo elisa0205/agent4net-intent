@@ -14,6 +14,7 @@ import re
 class AgentState(TypedDict):
     task: str
     generated_yaml: str
+    yaml_path: str
     feedback: str
     attempts: int
 
@@ -58,7 +59,10 @@ def syntax_validator_node(state: AgentState):
     print("Syntax validator")
 
     yaml_code = state['generated_yaml']
-    filename = "temp_config.yaml"
+
+    results_dir = "results"
+    os.makedirs(results_dir, exist_ok=True)
+    filename = os.path.join(results_dir, f"config_attempt_{state['attempts']}.yaml")
 
     #correct from EOL to LF
     yaml_code = yaml_code.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
@@ -76,33 +80,64 @@ def syntax_validator_node(state: AgentState):
     
     if result.returncode == 0:
         # No errors
-        os.remove(filename)
-        return {"feedback": "VALID", "attempts": state['attempts']}
+        return {"feedback": "VALID", 
+                "yaml_path": filename,
+                "attempts": state['attempts']}
     
-    elif result.returncode == 1:
+    else:
         error_message = result.stdout + result.stderr
         os.remove(filename)
 
         print(f"--- Error detected---\n {error_message} ---")
-        return {"feedback": f"Yamllint Error: {error_message}", "attempts": state['attempts']}
+        return {"feedback": f"Yamllint Error: {error_message}", 
+                "attempts": state['attempts']}
+
+
+def kubernetes_validator_node(state: AgentState):
+
+    print("Kubernetes validator\n")
+
+    file_path = state['yaml_path']
+
+    result = subprocess.run(
+        ["kubectl", "apply",  "-f", file_path, "--dry-run=server"],
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode == 0:
+        return {"feedback": "VALID",
+                "attempts": state['attempts']}
+    else:
+        error_message = result.stdout + result.stderr
+        print(f"--- Error detected---\n {error_message} ---")
+        return {"feedback": f"Kubernetes Validation Error: {error_message}",
+                "attempts": state['attempts']}
 
 
 # Logic
-def should_continue(state: AgentState):
-    if state['feedback'] == "VALID" or state['attempts'] > 2:
+def syntax_should_continue(state: AgentState):
+    if state['feedback'] == "VALID":
+        return "kubernetes_validator"
+    elif state['attempts'] > 2:
         return END
     return "generator"
 
-
+def kubernetes_should_continue(state: AgentState):
+    if state['feedback'] == "VALID" or state['attempts'] > 3:
+        return END
+    return "generator"
 
 workflow = StateGraph(AgentState)
 
 workflow.add_node("generator", generator_node)
 workflow.add_node("syntax_validator", syntax_validator_node)
+workflow.add_node("kubernetes_validator", kubernetes_validator_node)
 
 workflow.set_entry_point("generator") 
 workflow.add_edge("generator", "syntax_validator")
-workflow.add_conditional_edges("syntax_validator", should_continue)
+workflow.add_conditional_edges("syntax_validator", syntax_should_continue)
+workflow.add_conditional_edges("kubernetes_validator", kubernetes_should_continue)
 
 app = workflow.compile()
 
@@ -110,6 +145,7 @@ app = workflow.compile()
 inputs = {
     "task": "Create a simple Service ClusterIP Manifest for a app exposing port 8080.",
     "generated_yaml": "",
+    "yaml_path": "",
     "feedback": "",
     "attempts": 0
 }
