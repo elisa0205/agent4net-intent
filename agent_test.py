@@ -4,6 +4,7 @@ from langchain_litellm import ChatLiteLLM
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
 
+from utils import write_yaml_to_file
 
 # Import for YAML validation
 import subprocess
@@ -21,7 +22,6 @@ class AgentState(TypedDict):
 #model
 llm : ChatLiteLLM = ChatLiteLLM(
     model="ollama/qwen3.5:2b",
-    api_base="http://localhost:11434",
     streaming=False,
 )
 
@@ -45,35 +45,34 @@ def generator_node(state: AgentState):
         HumanMessage(content=prompt)
     ]
 
-    print(f"Call the LLM\n prompt: {message}\n ")
+    print(f"\nCall the LLM\n prompt: {message}\n ")
 
-    response = llm.invoke(message)
+    try:
+        response = llm.invoke(message)
+    
+    except (Exception) as e:
+        print(f"LLM call failed: {e}")
+        return {END}
 
-    print(f"\n --- Generated YAML (attempt {state['attempts'] + 1}): ---\n{response.content}\n--- End of YAML ---\n")
+    attempt = state["attempts"] + 1
+    print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
+    
+    file_path = write_yaml_to_file(response.content, attempt)
 
-    return {"generated_yaml": response.content, "attempts": state['attempts'] + 1}
+    return {"generated_yaml": response.content, 
+            "yaml_path": file_path,
+            "attempts": attempt}
 
 
 def syntax_validator_node(state: AgentState):
 
-    print("Syntax validator")
+    print("\nSyntax validator")
 
-    yaml_code = state['generated_yaml']
+    file_path = state["yaml_path"]
 
-    results_dir = "results"
-    os.makedirs(results_dir, exist_ok=True)
-    filename = os.path.join(results_dir, f"config_attempt_{state['attempts']}.yaml")
-
-    #correct from EOL to LF
-    yaml_code = yaml_code.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-    # Write the temporary YAML file
-    with open(filename, "w", encoding="utf-8", newline="\n") as f:
-        f.write(yaml_code)
-    
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
-        ["yamllint", "-f", "parsable", filename],
+        ["yamllint", "-f", "parsable", file_path],
         capture_output=True,
         text=True
     )
@@ -81,12 +80,10 @@ def syntax_validator_node(state: AgentState):
     if result.returncode == 0:
         # No errors
         return {"feedback": "VALID", 
-                "yaml_path": filename,
                 "attempts": state['attempts']}
     
     else:
         error_message = result.stdout + result.stderr
-        os.remove(filename)
 
         print(f"--- Error detected---\n {error_message} ---")
         return {"feedback": f"Yamllint Error: {error_message}", 
@@ -95,7 +92,7 @@ def syntax_validator_node(state: AgentState):
 
 def kubernetes_validator_node(state: AgentState):
 
-    print("Kubernetes validator\n")
+    print("\nKubernetes validator")
 
     file_path = state['yaml_path']
 
@@ -128,6 +125,7 @@ def kubernetes_should_continue(state: AgentState):
         return END
     return "generator"
 
+
 workflow = StateGraph(AgentState)
 
 workflow.add_node("generator", generator_node)
@@ -143,7 +141,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "task": "Create a simple Service ClusterIP Manifest for a app exposing port 8080.",
+    "task": "Create a simple configuration for a kubernetes cluster with a nginx server and expose it on port 80",
     "generated_yaml": "",
     "yaml_path": "",
     "feedback": "",
