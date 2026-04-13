@@ -47,8 +47,8 @@ flowchart TD
 		B --> C[syntax_validator_node]
 		C --> D[kubernetes_validator_node]
 		D --> E[END]
-		C -->|Validation fail| B
-		D -->|Validation fail| B
+		C -.->|Validation fail| B
+		D -.->|Validation fail| B
 ```
 
 ## Requirements
