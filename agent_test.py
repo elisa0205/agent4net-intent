@@ -36,15 +36,21 @@ Do not overthink."""
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
-    prompt = f"Task: {state['task']}\n"
     if state['feedback']:
-        prompt += f"Previous error to fix: {state['feedback']}\n YAML to correct: {state['generated_yaml']}"
+        #Limit the feedback to the last 500 characters to avoid hitting token limits
+        feedback_snippet = state['feedback'][-500:]
         
-    message = [
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=prompt)
-    ]
-
+        prompt = f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+        message = [
+            SystemMessage(content=prompt)
+        ]
+    else:
+        prompt = f"Task: {state['task']}\n"
+        message = [
+            SystemMessage(content=SYSTEM_PROMPT),
+            HumanMessage(content=prompt)
+        ]
+        
     print(f"\nCall the LLM\n prompt: {message}\n ")
 
     try:
@@ -72,7 +78,7 @@ def syntax_validator_node(state: AgentState):
 
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
-        ["yamllint", "-f", "parsable", file_path],
+        ["yamllint", "-d", "{extends: default, rules: {document-start: disable}}", "-f", "parsable", file_path],
         capture_output=True,
         text=True
     )

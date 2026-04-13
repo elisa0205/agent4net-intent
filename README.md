@@ -14,7 +14,7 @@ Given a natural language task, the agent:
 
 ### Root
 
-- `agent_test.py`: main script with agent state definition, LangGraph nodes, and loop/stop logic.
+- `agent_test.py`: main script with agent state definition, LangGraph nodes, and loop logic.
 - `utils.py`: helper functions.
 - `requirements.txt`: Python dependencies for the project.
 
@@ -61,7 +61,7 @@ flowchart TD
 - Python 3.10+
 - `yamllint` available in the Python environment
 - `kubectl` installed and configured against a reachable cluster using `minikube` 
-- Ollama running locally with the model configured in `agent_test.py`
+- `Ollama` running locally with the model configured in `agent_test.py`
 
 ## Quick Start
 
