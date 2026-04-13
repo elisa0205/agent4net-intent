@@ -51,6 +51,11 @@ flowchart TD
 		D -.->|Validation fail| B
 ```
 
+### Nodes 
+- `generator_node`: Invokes the LLM using the user’s prompt, waits for the model’s response, and writes the generated YAML file that will be used in the subsequent validation steps. When validation errors occur, they are appended to the prompt so the model can refine the output in the next iteration.
+- `syntax_validation_node`: Uses `yamllint` to check the syntactic correctness of the generated YAML file. If no issues are found, execution proceeds to the next node; otherwise, the process returns to the generator node, adding the linting errors to the prompt.
+- `kubernetes_validator_node`: Runs `kubectl --dry-run= server` to validate the functional correctness of the configuration against a live `Minikube` cluster. If the configuration passes, the agent’s execution ends. If errors are detected, the process returns to the generator node, including the validation output in the prompt.
+
 ## Requirements
 
 - Python 3.10+
