@@ -43,15 +43,12 @@ The shared state (`AgentState`) includes:
 
 ```mermaid
 flowchart TD
-		A[Start] --> B[generator_node]
-		B --> C[write_yaml_to_file]
-		C --> D[syntax_validator_node<br/>yamllint]
-		D -->|VALID| E[kubernetes_validator_node<br/>kubectl dry-run=server]
-		D -->|Yamllint Error and attempts <= 2| B
-		D -->|attempts > 2| F[END]
-		E -->|VALID| F
-		E -->|K8s Error and attempts <= 3| B
-		E -->|attempts > 3| F
+		A[START] --> B[generator_node]
+		B --> C[syntax_validator_node]
+		C --> D[kubernetes_validator_node]
+		D --> E[END]
+		C -->|Validation fail| B
+		D -->|Validation fail| B
 ```
 
 ## Requirements
