@@ -1,0 +1,3 @@
+The provided configuration implements a microservice architecture for the hello web application by separating backend and frontend tiers with distinct deployments and network policies. 
+The backend deployment utilizes three replicas on the stable track using a Google Cloud sample image, while the frontend component runs a single replica of an nginx container for static web rendering. 
+To ensure security and proper routing, a NetworkPolicy restricts backend traffic ingress to only the frontend pods, allowing the application to communicate solely through the designated frontend service exposed on a LoadBalancer. 
