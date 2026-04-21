@@ -21,7 +21,7 @@ class AgentState(TypedDict):
 
 #model
 llm : ChatLiteLLM = ChatLiteLLM(
-    model="ollama/qwen3.5:0.8b",
+    model="ollama/qwen3.5:2b",
     streaming=False,
 )
 
@@ -39,20 +39,10 @@ The main resources are:
 - ConfigMap and Secret: used to store configuration data and sensitive information, respectively.
 - PersistentVolume and PersistentVolumeClaim: used for managing storage in Kubernetes.
 
-Resources base format:
-Resource:
-  apiVersion: string (required)
-  kind: string (required)
-  metadata:
-    name: string (required)
-    labels: map<string,string> (optional)
-  spec: object (required)
-
 ## Requirements
 - Output ONLY valid Kubernetes YAML.
 - Do not include explanations or comments.
 - If multiple resources are needed, separate them with ---.
-- Do not overthink.
 """
 
 
@@ -60,13 +50,13 @@ Resource:
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
-    prompt = f"Task: {state['task']}\n"
+    prompt = f"## Task: {state['task']}\n"
 
     if state['feedback']:
         #Limit the feedback to the last 500 characters to avoid hitting token limits
         feedback_snippet = state['feedback'][-500:]
         
-        prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+        prompt += f"## Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
     
     message = [
         SystemMessage(content=SYSTEM_PROMPT),

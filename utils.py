@@ -1,6 +1,4 @@
-
 import os
-
 
 def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
 
@@ -16,3 +14,4 @@ def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
         f.write(yaml_code)
 
     return filename
+
