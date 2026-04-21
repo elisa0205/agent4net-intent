@@ -25,11 +25,35 @@ llm : ChatLiteLLM = ChatLiteLLM(
     streaming=False,
 )
 
-SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
-Return ONLY valid Kubernetes YAML.
-No explanations. No markdown fences. No comments.
-If multiple resources are needed, separate them with ---.
-Do not overthink."""
+SYSTEM_PROMPT = """
+You are an LLM specialized in generating Kubernetes manifests.
+
+## Domain Description
+Kubernetes is a system of containers orchestrator that allows you to deploy and manage containerized applications. 
+Kubernetes manifests are YAML files that describe the desired state of your Kubernetes resources.
+The main resources are:
+- Pods: the smallest deployable units that can be created and managed in Kubernetes.
+- Deployments: a higher-level abstraction that manages a group of pods and ensures that the desired number of replicas are running.
+- Services: an abstraction that defines a logical set of pods and a policy by which to access them.
+- Ingress: an API object that manages external access to the services in a cluster, typically HTTP.
+- ConfigMap and Secret: used to store configuration data and sensitive information, respectively.
+- PersistentVolume and PersistentVolumeClaim: used for managing storage in Kubernetes.
+
+Resources base format:
+Resource:
+  apiVersion: string (required)
+  kind: string (required)
+  metadata:
+    name: string (required)
+    labels: map<string,string> (optional)
+  spec: object (required)
+
+## Requirements
+- Output ONLY valid Kubernetes YAML.
+- Do not include explanations or comments.
+- If multiple resources are needed, separate them with ---.
+- Do not overthink.
+"""
 
 
 # Nodes 
@@ -40,12 +64,12 @@ def generator_node(state: AgentState):
         #Limit the feedback to the last 500 characters to avoid hitting token limits
         feedback_snippet = state['feedback'][-500:]
         
-        prompt = f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+        prompt = f"##Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
         message = [
             SystemMessage(content=prompt)
         ]
     else:
-        prompt = f"Task: {state['task']}\n"
+        prompt = f"##Task:\n {state['task']}\n"
         message = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=prompt)
@@ -78,7 +102,9 @@ def syntax_validator_node(state: AgentState):
 
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
-        ["yamllint", "-d", "{extends: default, rules: {document-start: disable}}", "-f", "parsable", file_path],
+        ["yamllint", "-d", 
+         "{extends: default, rules: {document-start: disable, indentation: {indent-sequences: consistent}}}", 
+         "-f", "parsable", file_path],
         capture_output=True,
         text=True
     )
