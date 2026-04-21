@@ -21,7 +21,7 @@ class AgentState(TypedDict):
 
 #model
 llm : ChatLiteLLM = ChatLiteLLM(
-    model="ollama/qwen3.5:2b",
+    model="ollama/qwen3.5:0.8b",
     streaming=False,
 )
 
@@ -60,20 +60,18 @@ Resource:
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
+    prompt = f"Task: {state['task']}\n"
+
     if state['feedback']:
         #Limit the feedback to the last 500 characters to avoid hitting token limits
         feedback_snippet = state['feedback'][-500:]
         
-        prompt = f"##Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
-        message = [
-            SystemMessage(content=prompt)
-        ]
-    else:
-        prompt = f"##Task:\n {state['task']}\n"
-        message = [
-            SystemMessage(content=SYSTEM_PROMPT),
-            HumanMessage(content=prompt)
-        ]
+        prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+    
+    message = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=prompt)
+    ]
         
     print(f"\nCall the LLM\n prompt: {message}\n ")
 
@@ -82,7 +80,7 @@ def generator_node(state: AgentState):
     
     except (Exception) as e:
         print(f"LLM call failed: {e}")
-        return {END}
+        return END
 
     attempt = state["attempts"] + 1
     print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
@@ -173,7 +171,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "task": "Create a simple configuration for a kubernetes cluster with a nginx server and expose it on port 80",
+    "task": "This Kubernetes configuration deploys a high-availability web application using the Nginx image with 3 replicas and exposes the service via NodePort, allowing external clients to access the container on port 80.",
     "generated_yaml": "",
     "yaml_path": "",
     "feedback": "",

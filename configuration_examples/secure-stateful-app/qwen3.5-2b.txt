@@ -1,0 +1,1 @@
+This Kubernetes configuration deploys a MySQL 5.6 application with two replicas using Persistent Volumes and Claims for data persistence, Securely stores the root password via a Kubernetes Secret, and exposes the database via a Service (using clusterIP: None to utilize node ports or dynamic IPs).

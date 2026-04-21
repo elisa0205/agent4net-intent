@@ -1,0 +1,2 @@
+This Kubernetes configuration deploys a MySQL 9 application with persistent data storage. 
+It defines a Service with clusterIP: None and uses Persistent Volume Claims and Persistent Volumes for data persistence.

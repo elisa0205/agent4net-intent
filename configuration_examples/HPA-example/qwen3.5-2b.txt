@@ -1,0 +1,4 @@
+The Kubernetes configuration establishes an auto-scaling infrastructure for the cpu-demo web application, designed to dynamically manage resource consumption and maintain system resilience. 
+It employs a HorizontalPodAutoscaler to monitor CPU utilization and automatically adjusts the number of running instances between a minimum of one and a maximum of five replicas based on demand. 
+The target utilization is set at 30 percent CPU, which acts as the primary trigger to scale the deployment up or down accordingly. 
+The underlying Deployment is configured with resource requests and limits of 200m and 500m CPU to ensure efficiency, while the Service exposes the application on ClusterIP at port 8080 for consistent access. 

@@ -1,0 +1,1 @@
+This Kubernetes configuration deploys a high-availability web application using the Nginx image with 3 replicas and exposes the service via NodePort, allowing external clients to access the container on port 80.
