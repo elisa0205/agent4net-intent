@@ -22,6 +22,7 @@ class AgentState(TypedDict):
 #model
 llm : ChatLiteLLM = ChatLiteLLM(
     model="ollama/qwen3.5:2b",
+    temperature=0,
     streaming=False,
 )
 
