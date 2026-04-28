@@ -13,11 +13,11 @@ spec:
   nodeAffinity:
     required:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - node1
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - node1
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -39,8 +39,8 @@ spec:
     app: mysql
   clusterIP: None
   ports:
-  - port: 3306
-    targetPort: 3306
+    - port: 3306
+      targetPort: 3306
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -57,17 +57,17 @@ spec:
         app: mysql
     spec:
       containers:
-      - name: mysql
-        image: mysql:9.0
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "password"
-        ports:
-        - containerPort: 3306
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
+        - name: mysql
+          image: mysql:9.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "password"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
       volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
