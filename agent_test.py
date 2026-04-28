@@ -6,10 +6,13 @@ from langchain_core.messages import SystemMessage, HumanMessage
 
 from utils import write_yaml_to_file
 
-# Import for YAML validation
 import subprocess
 import os
 import re
+
+project_id = os.environ["WATSONX_PROJECT_ID"]
+api_key = os.environ["WATSONX_API_KEY"]
+api_base = os.environ["WATSONX_API_BASE"]
 
 # Agent State
 class AgentState(TypedDict):
@@ -21,8 +24,8 @@ class AgentState(TypedDict):
 
 #model
 llm : ChatLiteLLM = ChatLiteLLM(
-    model="ollama/qwen3.5:0.8b",
-    streaming=False,
+    model="watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8",
+    project_id=project_id
 )
 
 SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
@@ -76,7 +79,9 @@ def syntax_validator_node(state: AgentState):
 
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
-        ["yamllint", "-d", "{extends: default, rules: {document-start: disable}}", "-f", "parsable", file_path],
+        ["yamllint", "-d", 
+         "{extends: default, rules: {document-start: disable, indentation: {indent-sequences: consistent}}}", 
+         "-f", "parsable", file_path],
         capture_output=True,
         text=True
     )
@@ -145,7 +150,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "task": "This Kubernetes configuration deploys a high-availability web application using the Nginx image with 3 replicas and exposes the service via NodePort, allowing external clients to access the container on port 80.",
+    "task": "This Kubernetes configuration deploys a MySQL 9 application with persistent data storage. It defines a Service with clusterIP: None and uses Persistent Volume Claims and Persistent Volumes for data persistence.",
     "generated_yaml": "",
     "yaml_path": "",
     "feedback": "",
