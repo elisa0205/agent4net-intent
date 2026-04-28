@@ -1,0 +1,9 @@
+# Extension configuration for the yamllint tool
+
+extends: default
+
+rules:
+  document-start: disable
+  indentation:
+    spaces: consistent
+    indent-sequences: whatever

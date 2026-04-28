@@ -69,7 +69,7 @@ def generator_node(state: AgentState):
         return END
 
     attempt = state["attempts"] + 1
-    print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
+    #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
     
     file_path = write_yaml_to_file(response.content, attempt)
 
@@ -86,8 +86,8 @@ def syntax_validator_node(state: AgentState):
 
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
-        ["yamllint", "-d", 
-         "{extends: default, rules: {document-start: disable, indentation: {indent-sequences: consistent}}}", 
+        ["yamllint",
+         "-c", "yamllint_config.yaml",
          "-f", "parsable", file_path],
         capture_output=True,
         text=True
