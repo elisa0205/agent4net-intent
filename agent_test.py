@@ -65,8 +65,8 @@ def generator_node(state: AgentState):
         response = wx_llm.invoke(message)
     
     except (Exception) as e:
-        print(f"LLM call failed: {e}")
-        return END
+        print(f"LLM call failed:\n{e}")
+        return {"feedback": "FAILED"}
 
     attempt = state["attempts"] + 1
     #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
@@ -129,6 +129,11 @@ def kubernetes_validator_node(state: AgentState):
 
 
 # Logic
+def generator_should_continue(state: AgentState):
+    if state["feedback"] == "FAILED":
+        return END
+    return "syntax_validator"
+
 def syntax_should_continue(state: AgentState):
     if state['feedback'] == "VALID":
         return "kubernetes_validator"
@@ -149,7 +154,7 @@ workflow.add_node("syntax_validator", syntax_validator_node)
 workflow.add_node("kubernetes_validator", kubernetes_validator_node)
 
 workflow.set_entry_point("generator") 
-workflow.add_edge("generator", "syntax_validator")
+workflow.add_conditional_edges("generator", generator_should_continue)
 workflow.add_conditional_edges("syntax_validator", syntax_should_continue)
 workflow.add_conditional_edges("kubernetes_validator", kubernetes_should_continue)
 
