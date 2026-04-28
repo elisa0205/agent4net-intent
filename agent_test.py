@@ -21,12 +21,19 @@ class AgentState(TypedDict):
     yaml_path: str
     feedback: str
     attempts: int
+    
 
-#model
-llm : ChatLiteLLM = ChatLiteLLM(
+#models
+wx_llm : ChatLiteLLM = ChatLiteLLM(
     model="watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8",
     project_id=project_id
 )
+
+ollama_llm : ChatLiteLLM = ChatLiteLLM(
+    model="ollama/qwen3.5:0.8b",
+    streaming=False
+)
+
 
 SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
 Return ONLY valid Kubernetes YAML.
@@ -55,7 +62,7 @@ def generator_node(state: AgentState):
     print(f"\nCall the LLM\n prompt: {message}\n ")
 
     try:
-        response = llm.invoke(message)
+        response = wx_llm.invoke(message)
     
     except (Exception) as e:
         print(f"LLM call failed: {e}")
