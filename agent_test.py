@@ -43,8 +43,8 @@ If multiple resources are needed, separate them with ---.
 Do not overthink."""
 
 SCOPE_CONSISTENCY_SYSTEM_PROMPT ="""You are a security and scope gate for a Kubernetes YAML generator.
-Return only one of:
-VALID
+Return only one of :
+VALID (without any explanations)
 INVALID: <short reason>
 
 The user request must be about generating Kubernetes manifests or closely related deployment configuration.
@@ -52,7 +52,7 @@ Reject requests about other subjects like malware, viruses, generic coding or ha
 
 SEMANTIC_CONSISTENCY_SYSTEM_PROMPT = """You are a validator of semantic consistency between a user task and a Kubernetes YAML manifest.
 Return only one of:
-VALID
+VALID (without any explanations)
 INVALID: <short reason>
 
 Check whether the YAML actually satisfies the user's request, including functionalities, resources type and other explicit constraints."""
@@ -225,7 +225,7 @@ app = workflow.compile()
 
 
 inputs = {
-    "task": "This Kubernetes configuration deploys a MySQL 9 application with persistent data storage. It defines a Service with clusterIP: None and uses Persistent Volume Claims and Persistent Volumes for data persistence.",
+    "task": "The provided configuration implements a microservice architecture for the hello web application by separating backend and frontend tiers with distinct deployments and network policies. The backend deployment utilizes three replicas on the stable track using a Google Cloud sample image, while the frontend component runs a single replica of an nginx container for static web rendering. To ensure security and proper routing, a NetworkPolicy restricts backend traffic ingress to only the frontend pods, allowing the application to communicate solely through the designated frontend service exposed on a LoadBalancer. ",
     "generated_yaml": "",
     "yaml_path": "",
     "feedback": "",
