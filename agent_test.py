@@ -21,6 +21,7 @@ class AgentState(TypedDict):
     yaml_path: str
     feedback: str
     attempts: int
+    consistency: str
     
 
 #models
@@ -34,15 +35,61 @@ ollama_llm : ChatLiteLLM = ChatLiteLLM(
     streaming=False
 )
 
-
-SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
+# Prompts to be refined 
+GENERATOR_SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
 Return ONLY valid Kubernetes YAML.
 No explanations. No markdown fences. No comments.
 If multiple resources are needed, separate them with ---.
 Do not overthink."""
 
+SCOPE_CONSISTENCY_SYSTEM_PROMPT ="""You are a security and scope gate for a Kubernetes YAML generator.
+Return only one of:
+VALID
+INVALID: <short reason>
+
+The user request must be about generating Kubernetes manifests or closely related deployment configuration.
+Reject requests about other subjects like malware, viruses, generic coding or harmful content unrelated to Kubernetes."""
+
+SEMANTIC_CONSISTENCY_SYSTEM_PROMPT = """You are a validator of semantic consistency between a user task and a Kubernetes YAML manifest.
+Return only one of:
+VALID
+INVALID: <short reason>
+
+Check whether the YAML actually satisfies the user's request, including functionalities, resources type and other explicit constraints."""
+
 
 # Nodes 
+def consistency_check(system_prompt: str, role: str):
+
+    def consistency_node(state: AgentState):
+        if role == "semantic":
+            prompt = f"Task: {state['task']}\n\nGenerated YAML:\n{state['generated_yaml']}"
+        elif role == "scope":
+            prompt = f"Task: {state['task']}\n"
+
+        message = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=prompt)
+        ]
+
+        print(f"\nConsistency check for the prompt's {role}")
+
+        response = wx_llm.invoke(message)
+
+        if response.content.strip() != "VALID":
+            print(f"Prompt consistency check failed:\n{response.content}")
+            return {"feedback": response.content,
+                    "consistency": "INVALID"}
+
+        print("Consistency check PASSED")
+        return {"consistency": "VALID"}   
+    
+    return consistency_node
+    
+scope_consistency_node = consistency_check(SCOPE_CONSISTENCY_SYSTEM_PROMPT, "scope")
+semantic_consistency_node = consistency_check(SEMANTIC_CONSISTENCY_SYSTEM_PROMPT, "semantic")
+
+
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
@@ -55,7 +102,7 @@ def generator_node(state: AgentState):
         prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
     
     message = [
-        SystemMessage(content=SYSTEM_PROMPT),
+        SystemMessage(content=GENERATOR_SYSTEM_PROMPT),
         HumanMessage(content=prompt)
     ]
         
@@ -129,6 +176,11 @@ def kubernetes_validator_node(state: AgentState):
 
 
 # Logic
+def scope_consistency_should_continue(state: AgentState):
+    if state['consistency'] == "INVALID":
+        return END
+    return "generator"
+
 def generator_should_continue(state: AgentState):
     if state["feedback"] == "FAILED":
         return END
@@ -142,21 +194,32 @@ def syntax_should_continue(state: AgentState):
     return "generator"
 
 def kubernetes_should_continue(state: AgentState):
-    if state['feedback'] == "VALID" or state['attempts'] > 3:
+    if state['feedback'] == "VALID":
+        return "semantic_consistency"
+    elif state['attempts'] > 2:
         return END
     return "generator"
 
+def semantic_consistency_should_continue(state: AgentState):
+    if state['consistency'] == "VALID":
+        return END
+    return "generator"
 
 workflow = StateGraph(AgentState)
 
+
+workflow.add_node("scope_consistency", scope_consistency_node)
 workflow.add_node("generator", generator_node)
 workflow.add_node("syntax_validator", syntax_validator_node)
 workflow.add_node("kubernetes_validator", kubernetes_validator_node)
+workflow.add_node("semantic_consistency", semantic_consistency_node)
 
-workflow.set_entry_point("generator") 
+workflow.set_entry_point("scope_consistency") 
+workflow.add_conditional_edges("scope_consistency", scope_consistency_should_continue)
 workflow.add_conditional_edges("generator", generator_should_continue)
 workflow.add_conditional_edges("syntax_validator", syntax_should_continue)
 workflow.add_conditional_edges("kubernetes_validator", kubernetes_should_continue)
+workflow.add_conditional_edges("semantic_consistency", semantic_consistency_should_continue)
 
 app = workflow.compile()
 
