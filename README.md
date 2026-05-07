@@ -5,10 +5,12 @@ Repository to generate and validate Kubernetes YAML configurations using a LangG
 ## Goal
 
 Given a natural language task, the agent:
-1. generates Kubernetes YAML Manifest,
-2. validates syntax with `yamllint`,
-3. validates Kubernetes correctness using `minikube`,
-4. regenerates YAML with feedback when errors are found.
+1. Check the prompt consistency based on the role of the agent, blocking malicious or not related requests,
+2. Generates Kubernetes YAML Manifest,
+3. Validates syntax with `yamllint`,
+4. Validates Kubernetes correctness using `minikube`,
+5. Check that the generated code satisfies what the user requested,
+6. Regenerates YAML with feedback when errors are found.
 
 ## Repository Structure
 
@@ -16,7 +18,8 @@ Given a natural language task, the agent:
 
 - `agent_test.py`: main script with agent state definition, LangGraph nodes, and loop logic.
 - `utils.py`: helper functions.
-- `requirements.txt`: Python dependencies for the project.
+- `requirements.txt`: python dependencies for the project.
+- `yamllint_config.yaml`: yaml file containing the configuration of `yamllint` used in the agent.
 
 
 ### configuration_examples/
@@ -40,27 +43,35 @@ The shared state (`AgentState`) includes:
 - `yaml_path`: file path of the YAML written to disk.
 - `feedback`: outcome or error from the latest validation.
 - `attempts`: number of attempts.
+- `consistency`: outcome from the consistency checks.
 
 ### Flow
 
 ```mermaid
 flowchart TD
-		A[START] --> B[generator_node]
-		B --> C[syntax_validator_node]
-		C --> D[kubernetes_validator_node]
-		D --> E[END]
-		C -.->|Validation fail| B
-		D -.->|Validation fail| B
+		A[START] --> B[scope_consistency_node]
+		B--> C[generator_node]
+		C --> D[syntax_validator_node]
+		D --> E[kubernetes_validator_node]
+		E --> F[semantic_consistency_node]
+		F --> G[END]
+		D -.->|Validation fail| C
+		E -.->|Validation fail| C
+		F -.->|Invalid Code| C
+		B -.->|Invalid Prompt| G
+
 ```
 
 ### Nodes 
+- `scope_consistency_node`:Validates that the user's request is within the scope of the agent and blocks malicious or unrelated prompts invoking a LLM. If the prompt is invalid, the execution terminates immediately.
 - `generator_node`: Invokes the LLM using the user’s prompt, waits for the model’s response, and writes the generated YAML file that will be used in the subsequent validation steps. When validation errors occur, they are appended to the prompt so the model can refine the output in the next iteration.
 - `syntax_validation_node`: Uses `yamllint` to check the syntactic correctness of the generated YAML file. If no issues are found, execution proceeds to the next node; otherwise, the process returns to the generator node, adding the linting errors to the prompt.
 - `kubernetes_validator_node`: Runs `kubectl --dry-run= server` to validate the functional correctness of the configuration against a live `Minikube` cluster. If the configuration passes, the agent’s execution ends. If errors are detected, the process returns to the generator node, including the validation output in the prompt.
+- `semantic_consistency_node`: Validates semantic consistency between the user's requested intent and the generated Kubernetes YAML manifest. If the generated YAML does not match the requirements, execution returns to the generator node for refinement.
 
 ## Requirements
 
-- Python 3.10+
+- `Python 3.10+`
 - `yamllint` available in the Python environment
 - `kubectl` installed and configured against a reachable cluster using `minikube` 
 - `Ollama` running locally with the model configured in `agent_test.py`
