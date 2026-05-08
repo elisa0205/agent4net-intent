@@ -4,15 +4,41 @@ from langchain_litellm import ChatLiteLLM
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from utils import write_yaml_to_file
+from utils import *
 
 import subprocess
 import os
 import re
+import yaml
+
 
 project_id = os.environ["WATSONX_PROJECT_ID"]
 api_key = os.environ["WATSONX_API_KEY"]
 api_base = os.environ["WATSONX_API_BASE"]
+
+prompt_config = load_prompt_config("prompts.yaml")
+model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+
+
+#models
+wx_llm : ChatLiteLLM = ChatLiteLLM(
+    model=model_name,
+    project_id=project_id
+)
+
+ollama_llm : ChatLiteLLM = ChatLiteLLM(
+    #model="ollama/qwen3.5:0.8b",
+    model=model_name,
+    streaming=False
+)
+
+# Prompts to be refined 
+GENERATOR_SYSTEM_PROMPT = prompt_config["models"][model_name]["generator"]
+
+SCOPE_CONSISTENCY_SYSTEM_PROMPT = prompt_config["models"][model_name]["scope_consistency"]
+
+SEMANTIC_CONSISTENCY_SYSTEM_PROMPT = prompt_config["models"][model_name]["semantic_consistency"]
+
 
 # Agent State
 class AgentState(TypedDict):
@@ -22,40 +48,6 @@ class AgentState(TypedDict):
     feedback: str
     attempts: int
     consistency: str
-    
-
-#models
-wx_llm : ChatLiteLLM = ChatLiteLLM(
-    model="watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8",
-    project_id=project_id
-)
-
-ollama_llm : ChatLiteLLM = ChatLiteLLM(
-    model="ollama/qwen3.5:0.8b",
-    streaming=False
-)
-
-# Prompts to be refined 
-GENERATOR_SYSTEM_PROMPT = """You are a Kubernetes YAML generator.
-Return ONLY valid Kubernetes YAML.
-No explanations. No markdown fences. No comments.
-If multiple resources are needed, separate them with ---.
-Do not overthink."""
-
-SCOPE_CONSISTENCY_SYSTEM_PROMPT ="""You are a security and scope gate for a Kubernetes YAML generator.
-Return only one of :
-VALID (without any explanations)
-INVALID: <short reason>
-
-The user request must be about generating Kubernetes manifests or closely related deployment configuration.
-Reject requests about other subjects like malware, viruses, generic coding or harmful content unrelated to Kubernetes."""
-
-SEMANTIC_CONSISTENCY_SYSTEM_PROMPT = """You are a validator of semantic consistency between a user task and a Kubernetes YAML manifest.
-Return only one of:
-VALID (without any explanations)
-INVALID: <short reason>
-
-Check whether the YAML actually satisfies the user's request, including functionalities, resources type and other explicit constraints."""
 
 
 # Nodes 

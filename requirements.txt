@@ -6,3 +6,4 @@ langchain-ollama
 langgraph
 yamllint
 python-dotenv
+pyyaml
