@@ -19,7 +19,8 @@ Given a natural language task, the agent:
 - `agent_test.py`: main script with agent state definition, LangGraph nodes, and loop logic.
 - `utils.py`: helper functions.
 - `requirements.txt`: python dependencies for the project.
-- `yamllint_config.yaml`: yaml file containing the configuration of `yamllint` used in the agent.
+- `yamllint_config.yaml`: YAML file containing the configuration of `yamllint` used in the agent.
+- `prompts.yaml`:YAML file containing the prompts used by the agent, optimized for several different models.
 
 
 ### configuration_examples/
@@ -71,6 +72,7 @@ flowchart TD
 
 ## Requirements
 
+Basic tools required:
 - `Python 3.10+`
 - `yamllint` available in the Python environment
 - `kubectl` installed and configured against a reachable cluster using `minikube` 
