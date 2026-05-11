@@ -1,5 +1,4 @@
-from typing import Annotated, TypedDict
-from langchain_ollama import ChatOllama
+from typing import TypedDict
 from langchain_litellm import ChatLiteLLM
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -8,15 +7,16 @@ from utils import *
 
 import subprocess
 import os
-import re
-import yaml
-
 
 project_id = os.environ["WATSONX_PROJECT_ID"]
 api_key = os.environ["WATSONX_API_KEY"]
 api_base = os.environ["WATSONX_API_BASE"]
 
 prompt_config = load_prompt_config("prompts.yaml")
+
+# One of:
+#  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+#  - "ollama/qwen3.5:0.8b"
 model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
 
 
@@ -27,7 +27,6 @@ wx_llm : ChatLiteLLM = ChatLiteLLM(
 )
 
 ollama_llm : ChatLiteLLM = ChatLiteLLM(
-    #model="ollama/qwen3.5:0.8b",
     model=model_name,
     streaming=False
 )
@@ -58,6 +57,8 @@ def consistency_check(system_prompt: str, role: str):
             prompt = f"Task: {state['task']}\n\nGenerated YAML:\n{state['generated_yaml']}"
         elif role == "scope":
             prompt = f"Task: {state['task']}\n"
+        else:
+            return {"consistency": "INVALID"}
 
         message = [
             SystemMessage(content=system_prompt),

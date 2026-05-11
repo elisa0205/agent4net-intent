@@ -20,7 +20,7 @@ Given a natural language task, the agent:
 - `utils.py`: helper functions.
 - `requirements.txt`: python dependencies for the project.
 - `yamllint_config.yaml`: YAML file containing the configuration of `yamllint` used in the agent.
-- `prompts.yaml`:YAML file containing the prompts used by the agent, optimized for several different models.
+- `prompts.yaml`: YAML file containing the prompts used by the agent, optimized for several different models.
 
 
 ### configuration_examples/
