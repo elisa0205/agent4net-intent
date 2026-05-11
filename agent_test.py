@@ -1,35 +1,21 @@
 from typing import TypedDict
-from langchain_litellm import ChatLiteLLM
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
-
 from utils import *
 
 import subprocess
-import os
 
-project_id = os.environ["WATSONX_PROJECT_ID"]
-api_key = os.environ["WATSONX_API_KEY"]
-api_base = os.environ["WATSONX_API_BASE"]
 
-prompt_config = load_prompt_config("prompts.yaml")
 
 # One of:
 #  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
 #  - "ollama/qwen3.5:0.8b"
 model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
 
+#model
+llm = create_llm(model_name)
 
-#models
-wx_llm : ChatLiteLLM = ChatLiteLLM(
-    model=model_name,
-    project_id=project_id
-)
-
-ollama_llm : ChatLiteLLM = ChatLiteLLM(
-    model=model_name,
-    streaming=False
-)
+prompt_config = load_prompt_config("prompts.yaml")
 
 # Prompts to be refined 
 GENERATOR_SYSTEM_PROMPT = prompt_config["models"][model_name]["generator"]
@@ -67,7 +53,7 @@ def consistency_check(system_prompt: str, role: str):
 
         print(f"\nConsistency check for the prompt's {role}")
 
-        response = wx_llm.invoke(message)
+        response = llm.invoke(message)
 
         if response.content.strip() != "VALID":
             print(f"Prompt consistency check failed:\n{response.content}")
@@ -102,7 +88,7 @@ def generator_node(state: AgentState):
     print(f"\nCall the LLM\n prompt: {message}\n ")
 
     try:
-        response = wx_llm.invoke(message)
+        response = llm.invoke(message)
     
     except (Exception) as e:
         print(f"LLM call failed:\n{e}")

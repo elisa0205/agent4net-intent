@@ -1,7 +1,9 @@
 
 import os
 import yaml
+from langchain_litellm import ChatLiteLLM
 
+# From generated agent text to file 
 def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
 
     results_dir = "results"
@@ -17,6 +19,22 @@ def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
 
     return filename
 
+# Load YAML file correctly
 def load_prompt_config(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as file:
         return yaml.safe_load(file)
+    
+# Factory function to create the LLM based on the model name passed
+def create_llm(model_name: str) -> ChatLiteLLM:
+    if model_name.startswith("watsonx/"):
+
+        project_id = os.environ["WATSONX_PROJECT_ID"]
+        os.environ["WATSONX_API_KEY"]
+        os.environ["WATSONX_API_BASE"]
+
+        return ChatLiteLLM(model=model_name, project_id=project_id)
+
+    if model_name.startswith("ollama/"):
+        return ChatLiteLLM(model=model_name, streaming=False)
+
+    raise ValueError(f"Unsupported model prefix for model: {model_name}")
