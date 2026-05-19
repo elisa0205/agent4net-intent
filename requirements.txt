@@ -7,3 +7,4 @@ langgraph
 yamllint
 python-dotenv
 pyyaml
+fastapi[standard]
