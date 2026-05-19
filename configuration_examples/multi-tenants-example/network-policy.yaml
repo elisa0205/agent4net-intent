@@ -1,0 +1,27 @@
+# Allows only intra-namespace traffic and blocks any communication with pods from other namespaces 
+# unless explicitly allowed
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: tenant1
+spec:
+  # Apply to all pods in this namespace
+  podSelector: {}
+  # Empty ingress and egress rules = deny all
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: tenant2
+spec:
+  # Apply to all pods in this namespace
+  podSelector: {}
+  # Empty ingress and egress rules = deny all
+  policyTypes:
+    - Ingress
+    - Egress

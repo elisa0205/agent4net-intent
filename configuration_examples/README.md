@@ -2,6 +2,8 @@
 This folder contains a collection of Kubernetes configuration examples demonstrating different architectural patterns and cluster objects.
 Each subfolder represents a distinct scenario, with a specific focus on resources, networking, scalability, persistence, or environment isolation.
 
+Each directory additionally contains the intent produced by the LLM in response to a prompt requesting a description of the manifest files within that folder.
+
 ## Overview
 
 ### stateless-app
@@ -31,3 +33,7 @@ Demonstrates how to automatically scale pods based on resource utilization, part
 ### fronend-backend-app
 Example of a multi-tier application with frontend and backend separated.
 A LoadBalancer expose the frontend externally and a NetworkPolicy object allow the access to the backand tier only by pods in the frontend tier.
+
+### multi-tenants-example
+Example of multi-tenant isolation using separate namespaces, RBAC, and NetworkPolicy.
+Demonstrates how different tenants can be isolated with dedicated development manifests, namespace-specific permissions, and traffic restrictions between workloads.
