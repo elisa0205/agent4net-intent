@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend-api-postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: frontend-api-postgres
+data:
+  DB_HOST: postgres-service
+  DB_PORT: "5432"
+  DB_NAME: appdb
+  DB_USER: appuser
+  frontend-nginx.conf: |-
+    server {
+      listen 80;
+      server_name _;
+
+      location / {
+        root /usr/share/nginx/html;
+        index index.html;
+      }
+
+      location /api/ {
+        proxy_pass http://api-service:80/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    }
+  frontend-index.html: |-
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Frontend + API + PostgreSQL</title>
+      </head>
+      <body>
+        <h1>Frontend</h1>
+        <p>The frontend is exposed through the Ingress and proxies /api to the backend service.</p>
+        <p><a href="/api/health">Check API health</a></p>
+      </body>
+    </html>
+  api-nginx.conf: |-
+    server {
+      listen 80;
+      server_name _;
+
+      location /health {
+        default_type text/plain;
+        return 200 "api ok\n";
+      }
+
+      location / {
+        default_type text/plain;
+        return 200 "api service\n";
+      }
+    }

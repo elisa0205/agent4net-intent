@@ -37,3 +37,6 @@ A LoadBalancer expose the frontend externally and a NetworkPolicy object allow t
 ### multi-tenants-example
 Example of multi-tenant isolation using separate namespaces, RBAC, and NetworkPolicy.
 Demonstrates how different tenants can be isolated with dedicated development manifests, namespace-specific permissions, and traffic restrictions between workloads.
+
+### postgres-example
+Example of a multi-component web application with a frontend exposed by Ingress, an internal API, PostgreSQL persistence, shared ConfigMap settings, Secret-based credentials, and NetworkPolicies that isolate the backend traffic.
