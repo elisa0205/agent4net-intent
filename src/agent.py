@@ -54,7 +54,7 @@ def consistency_check(role: str):
             return {"feedback": response.content,
                     "consistency": "INVALID"}
 
-        print("Consistency check PASSED")
+        print("PASSED")
         return {"consistency": "VALID"}   
     
     return consistency_node
@@ -82,7 +82,8 @@ def generator_node(state: AgentState):
         HumanMessage(content=prompt)
     ]
         
-    print(f"\nCall the LLM\n prompt: {message}\n ")
+    print(f"\nCall the LLM\n")
+    #print(f"prompt: {message}\n ")
 
     try:
         response = llm.invoke(message)
@@ -103,7 +104,7 @@ def generator_node(state: AgentState):
 
 def syntax_validator_node(state: AgentState):
 
-    print("\nSyntax validator")
+    print("\nSyntax validator\n")
 
     file_path = state["yaml_path"]
 
@@ -118,6 +119,7 @@ def syntax_validator_node(state: AgentState):
     
     if result.returncode == 0:
         # No errors
+        print("PASSED")
         return {"feedback": "VALID", 
                 "attempts": state['attempts']}
     
@@ -131,7 +133,7 @@ def syntax_validator_node(state: AgentState):
 
 def kubernetes_validator_node(state: AgentState):
 
-    print("\nKubernetes validator")
+    print("\nKubernetes validator\n")
 
     file_path = state['yaml_path']
 
@@ -142,6 +144,7 @@ def kubernetes_validator_node(state: AgentState):
     )
 
     if result.returncode == 0:
+        print("PASSED")
         return {"feedback": "VALID",
                 "attempts": state['attempts']}
     else:
