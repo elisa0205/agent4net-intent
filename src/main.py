@@ -24,21 +24,23 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
         "generated_yaml": "",
         "yaml_path": "",
         "attempts": 0,
+        "feedback": "",
         "consistency": ""
     }
 
     try:
         result = None
-        for output in agent_app.stream(input):
-            result = output
+        final_state = agent_app.invoke(input)
+        #for output in agent_app.stream(input):
+        #    result = output
         
-        final_state = result[list(result.keys())[-1]]
+        #final_state = result[list(result.keys())[-1]]
 
         return AgentResponse(
             generated_yaml=final_state.get("generated_yaml", ""),
             yaml_path=final_state.get("yaml_path", ""),
             attempts=final_state.get("attempts", 0),
-            status=final_state.get("status", "")
+            status=final_state.get("consistency", "")
         )
     
     except Exception as e:

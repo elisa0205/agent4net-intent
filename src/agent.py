@@ -15,7 +15,7 @@ model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
 #model
 llm = create_llm(model_name)
 
-prompt_config = load_prompt_config("prompts.yaml")
+prompt_config = load_prompt_config("..\prompts.yaml")
 
 # Prompts to be refined 
 GENERATOR_SYSTEM_PROMPT = prompt_config["models"][model_name]["generator"]
@@ -113,7 +113,7 @@ def syntax_validator_node(state: AgentState):
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
         ["yamllint",
-         "-c", "yamllint_config.yaml",
+         "-c", "..\yamllint_config.yaml",
          "-f", "parsable", file_path],
         capture_output=True,
         text=True
@@ -211,6 +211,6 @@ inputs = {
     "attempts": 0
 }
 
-for output in app.stream(inputs):
-    print(output)
+# for output in app.stream(inputs):
+#    print(output)
 
