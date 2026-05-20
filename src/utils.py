@@ -1,6 +1,7 @@
 
 import os
 import yaml
+from functools import lru_cache
 from langchain_litellm import ChatLiteLLM
 
 # From generated agent text to file 
@@ -25,6 +26,7 @@ def load_prompt_config(path: str) -> dict:
         return yaml.safe_load(file)
     
 # Factory function to create the LLM based on the model name passed
+@lru_cache(maxsize=8)
 def create_llm(model_name: str) -> ChatLiteLLM:
     if model_name.startswith("watsonx/"):
 

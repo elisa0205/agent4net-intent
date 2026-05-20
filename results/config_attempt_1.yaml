@@ -1,73 +1,100 @@
-apiVersion: v1
-kind: PersistentVolume
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: mysql-pv
+  name: hello-backend
+  labels:
+    app: hello
+    tier: backend
 spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  local:
-    path: /mnt/data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - node1
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-spec:
+  replicas: 3
   selector:
-    app: mysql
-  clusterIP: None
-  ports:
-  - port: 3306
-    targetPort: 3306
+    matchLabels:
+      app: hello
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: hello
+        tier: backend
+        track: stable
+    spec:
+      containers:
+      - name: hello-backend
+        image: gcr.io/google-samples/hello-backend:v2
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: hello-frontend
+  labels:
+    app: hello
+    tier: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mysql
+      app: hello
+      tier: frontend
   template:
     metadata:
       labels:
-        app: mysql
+        app: hello
+        tier: frontend
     spec:
       containers:
-      - name: mysql
-        image: mysql:9.0
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "password"
+      - name: nginx
+        image: nginx
         ports:
-        - containerPort: 3306
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
-      volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
+        - containerPort: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-backend
+spec:
+  podSelector:
+    matchLabels:
+      app: hello
+      tier: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: hello
+          tier: frontend
+    - ports:
+      - 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-frontend
+spec:
+  selector:
+    app: hello
+    tier: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-backend
+spec:
+  selector:
+    app: hello
+    tier: backend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP

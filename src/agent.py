@@ -6,43 +6,37 @@ from utils import *
 import subprocess
 
 
-
-# One of:
-#  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
-#  - "ollama/qwen3.5:0.8b"
-model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
-
-#model
-llm = create_llm(model_name)
-
-prompt_config = load_prompt_config("..\prompts.yaml")
-
-# Prompts to be refined 
-GENERATOR_SYSTEM_PROMPT = prompt_config["models"][model_name]["generator"]
-
-SCOPE_CONSISTENCY_SYSTEM_PROMPT = prompt_config["models"][model_name]["scope_consistency"]
-
-SEMANTIC_CONSISTENCY_SYSTEM_PROMPT = prompt_config["models"][model_name]["semantic_consistency"]
-
-
 # Agent State
 class AgentState(TypedDict):
     task: str
+    model_name: str
     generated_yaml: str
     yaml_path: str
     feedback: str
     attempts: int
     consistency: str
 
+# Models one of:
+#  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+#  - "ollama/qwen3.5:0.8b"
+
+prompt_config = load_prompt_config("..\prompts.yaml")
 
 # Nodes 
-def consistency_check(system_prompt: str, role: str):
+def consistency_check(role: str):
 
     def consistency_node(state: AgentState):
+        
+        llm = create_llm(state["model_name"])
+
         if role == "semantic":
             prompt = f"Task: {state['task']}\n\nGenerated YAML:\n{state['generated_yaml']}"
+            system_prompt = prompt_config["models"][state['model_name']]["semantic_consistency"]
+
         elif role == "scope":
             prompt = f"Task: {state['task']}\n"
+            system_prompt = prompt_config["models"][state['model_name']]["scope_consistency"]
+
         else:
             return {"consistency": "INVALID"}
 
@@ -65,14 +59,17 @@ def consistency_check(system_prompt: str, role: str):
     
     return consistency_node
     
-scope_consistency_node = consistency_check(SCOPE_CONSISTENCY_SYSTEM_PROMPT, "scope")
-semantic_consistency_node = consistency_check(SEMANTIC_CONSISTENCY_SYSTEM_PROMPT, "semantic")
+scope_consistency_node = consistency_check("scope")
+semantic_consistency_node = consistency_check("semantic")
 
 
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
+    llm = create_llm(state["model_name"])
+
     prompt = f"Task: {state['task']}\n"
+    system_prompt = prompt_config["models"][state['model_name']]["generator"]
 
     if state['feedback']:
         #Limit the feedback to the last 500 characters to avoid hitting token limits
@@ -81,7 +78,7 @@ def generator_node(state: AgentState):
         prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
     
     message = [
-        SystemMessage(content=GENERATOR_SYSTEM_PROMPT),
+        SystemMessage(content=system_prompt),
         HumanMessage(content=prompt)
     ]
         
@@ -202,15 +199,4 @@ workflow.add_conditional_edges("semantic_consistency", semantic_consistency_shou
 
 app = workflow.compile()
 
-
-inputs = {
-    "task": "The provided configuration implements a microservice architecture for the hello web application by separating backend and frontend tiers with distinct deployments and network policies. The backend deployment utilizes three replicas on the stable track using a Google Cloud sample image, while the frontend component runs a single replica of an nginx container for static web rendering. To ensure security and proper routing, a NetworkPolicy restricts backend traffic ingress to only the frontend pods, allowing the application to communicate solely through the designated frontend service exposed on a LoadBalancer. ",
-    "generated_yaml": "",
-    "yaml_path": "",
-    "feedback": "",
-    "attempts": 0
-}
-
-# for output in app.stream(inputs):
-#    print(output)
 

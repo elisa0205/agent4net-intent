@@ -7,6 +7,7 @@ app = FastAPI()
 # Request Model
 class AgentRequest(BaseModel):
     task: str
+    model_name: str
 
 # Response Model
 class AgentResponse(BaseModel):
@@ -21,6 +22,7 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
 
     input = {
         "task": request.task,
+        "model_name": request.model_name,
         "generated_yaml": "",
         "yaml_path": "",
         "attempts": 0,
@@ -29,12 +31,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
     }
 
     try:
-        result = None
-        final_state = agent_app.invoke(input)
-        #for output in agent_app.stream(input):
-        #    result = output
         
-        #final_state = result[list(result.keys())[-1]]
+        final_state = agent_app.invoke(input)
 
         return AgentResponse(
             generated_yaml=final_state.get("generated_yaml", ""),

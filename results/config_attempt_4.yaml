@@ -21,6 +21,8 @@ spec:
       containers:
       - name: hello-backend
         image: gcr.io/google-samples/hello-backend:v2
+        ports:
+        - containerPort: 80
 
 ---
 apiVersion: apps/v1
@@ -67,7 +69,7 @@ spec:
           app: hello
           tier: frontend
     ports:
-    - 80
+    - port: 80
 
 ---
 apiVersion: v1

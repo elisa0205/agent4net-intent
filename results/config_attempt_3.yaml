@@ -67,7 +67,7 @@ spec:
           app: hello
           tier: frontend
     ports:
-    - 80
+    - port: 80
 
 ---
 apiVersion: v1
