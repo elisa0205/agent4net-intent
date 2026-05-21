@@ -1,0 +1,5 @@
+This configuration sets up a web application with a frontend, API, and PostgreSQL database in a Kubernetes environment. The application is deployed in a dedicated namespace and consists of multiple components, including a PostgreSQL database, an API service, and a frontend service. 
+
+The configuration defines the necessary resources, such as deployments, services, and network policies, to enable communication between the components. The frontend service is exposed through an ingress resource, allowing external access to the application. The API service proxies requests to the backend, and the PostgreSQL database is configured with a stateful set to ensure data persistence.
+
+The configuration also includes network policies to control traffic flow between the components, ensuring that only authorized communication is allowed. Overall, this setup provides a scalable and secure environment for the web application.

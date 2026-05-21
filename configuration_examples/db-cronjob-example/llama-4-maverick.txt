@@ -1,0 +1,10 @@
+This configuration sets up a PostgreSQL database in a Kubernetes cluster. The main characteristics are:
+
+* The database is deployed in a dedicated namespace called "database".
+* The PostgreSQL instance is deployed as a single replica using a Deployment resource.
+* The database credentials are stored securely as a Secret resource.
+* Persistent storage is allocated for the database data and backups using Persistent Volume Claims (PVCs).
+* The PostgreSQL service is exposed internally within the cluster using a Service resource with a ClusterIP type.
+* A CronJob is configured to run daily at 2am to backup the database to a separate PVC.
+
+Overall, this configuration provides a basic setup for a PostgreSQL database in a Kubernetes cluster with automated backups.

@@ -1,0 +1,9 @@
+This configuration sets up two isolated environments, `tenant1` and `tenant2`, each with its own namespace, deployments, services, and access controls. 
+
+`tenant1` runs a simple web application using the `nginx` image, with a single replica, and exposes it internally within the cluster using a ClusterIP service. The deployment is configured with readiness and liveness probes to ensure the application is running correctly.
+
+`tenant2` runs a more complex application with a frontend and backend architecture. The backend deployment consists of three replicas, while the frontend has one replica. The frontend service is exposed externally using a LoadBalancer, allowing incoming traffic to the application.
+
+Both tenants have their own service accounts, roles, and role bindings, which grant permissions to manage pods within their respective namespaces.
+
+Additionally, both namespaces have a default network policy that denies all ingress and egress traffic by default, providing an additional layer of isolation and security for the applications running within the tenants.
