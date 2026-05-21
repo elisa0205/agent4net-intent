@@ -6,40 +6,40 @@ Each directory additionally contains the intent produced by the LLM in response 
 
 ## Overview
 
-### stateless-app
+###  📁 stateless-app
 Minimal example of a stateless application.
 Shows gthe basic case of an application using a Deployment and a Service.
 
-### stateful-app
+###  📁 stateful-app
 Example of a simpler stateful application.
 Shows how to persist database data using a PersistenVolume object.
 
-### secure-stateful-app
+###  📁 secure-stateful-app
 Example of a secure stateful application.
 Shows data persistence, stable pod identities, and secure credential management using a Secret object.
 
-### prod-dev-example
+###  📁 prod-dev-example
 Example of separation between development and production environments.
 Demonstrates logical isolation between different environments and different namespaces.
 
-### php-guestbook-example
+###  📁 php-guestbook-example
 Guestbook example with PHP frontend and Redis backend.
 Shows a typical web architecture with Redis backend, separating read and write operations between leader and replicas.
 
-### HPA-example
+###  📁 HPA-example
 Example dedicated to horizontal pod autoscaling.
 Demonstrates how to automatically scale pods based on resource utilization, particularly CPU.
 
-### fronend-backend-app
+###  📁 fronend-backend-app
 Example of a multi-tier application with frontend and backend separated.
 A LoadBalancer expose the frontend externally and a NetworkPolicy object allow the access to the backand tier only by pods in the frontend tier.
 
-### multi-tenants-example
+###  📁 multi-tenants-example
 Example of multi-tenant isolation using separate namespaces, RBAC, and NetworkPolicy.
 Demonstrates how different tenants can be isolated with dedicated development manifests, namespace-specific permissions, and traffic restrictions between workloads.
 
-### postgres-example
+###  📁 postgres-example
 Example of a multi-component web application with a frontend exposed by Ingress, an internal API, PostgreSQL persistence, shared ConfigMap settings, Secret-based credentials, and NetworkPolicies that isolate the backend traffic.
 
-### db-cronjob-example
+###  📁 db-cronjob-example
 Example showing a Kubernetes CronJob used to run scheduled database backups. The job runs periodically and stores the dump in a persisten volume protected using a Secret.
