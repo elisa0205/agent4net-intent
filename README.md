@@ -8,7 +8,7 @@ Given a natural language task, the agent:
 1. Check the prompt consistency based on the role of the agent, blocking malicious or not related requests,
 2. Generates Kubernetes YAML Manifest,
 3. Validates syntax with `yamllint`,
-4. Validates Kubernetes correctness using `minikube`,
+4. Validates Kubernetes correctness using `kubectl` commands,
 5. Check that the generated code satisfies what the user requested,
 6. Regenerates YAML with feedback when errors are found.
 
@@ -89,5 +89,5 @@ Basic tools required:
 python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
-python agent_test.py
+python agent.py
 ```
