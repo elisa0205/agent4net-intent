@@ -7,3 +7,7 @@ rules:
   indentation:
     spaces: consistent
     indent-sequences: whatever
+  line-length:
+    max: 100
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true

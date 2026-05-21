@@ -40,3 +40,6 @@ Demonstrates how different tenants can be isolated with dedicated development ma
 
 ### postgres-example
 Example of a multi-component web application with a frontend exposed by Ingress, an internal API, PostgreSQL persistence, shared ConfigMap settings, Secret-based credentials, and NetworkPolicies that isolate the backend traffic.
+
+### db-cronjob-example
+Example showing a Kubernetes CronJob used to run scheduled database backups. The job runs periodically and stores the dump in a persisten volume protected using a Secret.

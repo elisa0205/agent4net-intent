@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: database
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: postgres-backup
+            image: postgres:14
+            command:
+            - /bin/bash
+            - -c
+            - pg_dump -U $POSTGRES_USER -d mydb -h postgres > /backup/dump.sql
+            env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: PGHOST
+              value: "postgres"
+            - name: PGUSER
+              value: "$POSTGRES_USER"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            volumeMounts:
+            - name: backup-data
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-data
+            persistentVolumeClaim:
+              claimName: backup-data

@@ -82,7 +82,7 @@ def generator_node(state: AgentState):
         HumanMessage(content=prompt)
     ]
         
-    print(f"\nCall the LLM\n")
+    print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
     #print(f"prompt: {message}\n ")
 
     try:
@@ -104,7 +104,7 @@ def generator_node(state: AgentState):
 
 def syntax_validator_node(state: AgentState):
 
-    print("\nSyntax validator\n")
+    print("\nSyntax validator")
 
     file_path = state["yaml_path"]
 
@@ -133,7 +133,7 @@ def syntax_validator_node(state: AgentState):
 
 def kubernetes_validator_node(state: AgentState):
 
-    print("\nKubernetes validator\n")
+    print("\nKubernetes validator")
 
     file_path = state['yaml_path']
 
@@ -168,14 +168,14 @@ def generator_should_continue(state: AgentState):
 def syntax_should_continue(state: AgentState):
     if state['feedback'] == "VALID":
         return "kubernetes_validator"
-    elif state['attempts'] > 2:
+    elif state['attempts'] > 6:
         return END
     return "generator"
 
 def kubernetes_should_continue(state: AgentState):
     if state['feedback'] == "VALID":
         return "semantic_consistency"
-    elif state['attempts'] > 2:
+    elif state['attempts'] > 6:
         return END
     return "generator"
 
