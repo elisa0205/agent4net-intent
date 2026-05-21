@@ -26,6 +26,9 @@ def load_prompt_config(path: str) -> dict:
         return yaml.safe_load(file)
     
 # Factory function to create the LLM based on the model name passed
+# lru_cache is used to avoid creating multiple instances of the same model, which can be expensive in terms of resources and time.
+# When the function is called with a model name, it checks if an instance of that model already exists in the cache. 
+# If it does, it returns the cached instance. If not, it creates a new instance, stores it in the cache, and then returns it. 
 @lru_cache(maxsize=8)
 def create_llm(model_name: str) -> ChatLiteLLM:
     if model_name.startswith("watsonx/"):
