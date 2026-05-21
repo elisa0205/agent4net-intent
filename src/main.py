@@ -14,7 +14,8 @@ class AgentResponse(BaseModel):
     generated_yaml: str
     yaml_path: str
     attempts: int
-    status: str
+    feedback: str
+    consistency: str
 
 
 @app.post("/generate_yaml")
@@ -38,7 +39,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
             generated_yaml=final_state.get("generated_yaml", ""),
             yaml_path=final_state.get("yaml_path", ""),
             attempts=final_state.get("attempts", 0),
-            status=final_state.get("consistency", "")
+            feedback=final_state.get("feedback", ""),
+            consistency=final_state.get("consistency", "")
         )
     
     except Exception as e:
@@ -46,5 +48,6 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
             generated_yaml="",
             yaml_path="",
             attempts=0,
-            status=f"FAILED: {str(e)}"
+            feedback=f"FAILED: {str(e)}",
+            consistency=""
         )

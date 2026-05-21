@@ -169,6 +169,7 @@ def syntax_should_continue(state: AgentState):
     if state['feedback'] == "VALID":
         return "kubernetes_validator"
     elif state['attempts'] > 6:
+        state['feedback'] = "FAILED: Maximum attempts reached"
         return END
     return "generator"
 
@@ -176,6 +177,7 @@ def kubernetes_should_continue(state: AgentState):
     if state['feedback'] == "VALID":
         return "semantic_consistency"
     elif state['attempts'] > 6:
+        state['feedback'] = "FAILED: Maximum attempts reached"
         return END
     return "generator"
 
