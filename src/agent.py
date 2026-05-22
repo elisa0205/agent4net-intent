@@ -51,7 +51,7 @@ def consistency_check(role: str):
 
         if response.content.strip() != "VALID":
             print(f"Prompt consistency check failed:\n{response.content}")
-            return {"feedback": response.content,
+            return {"feedback": f"Consistency Error: {response.content}",
                     "consistency": "INVALID"}
 
         print("PASSED")
@@ -183,6 +183,9 @@ def kubernetes_should_continue(state: AgentState):
 
 def semantic_consistency_should_continue(state: AgentState):
     if state['consistency'] == "VALID":
+        return END
+    elif state['attempts'] > 6:
+        state['feedback'] = "FAILED: Maximum attempts reached"
         return END
     return "generator"
 
