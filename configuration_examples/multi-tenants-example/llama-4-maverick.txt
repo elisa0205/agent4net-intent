@@ -6,5 +6,5 @@ This configuration sets up two isolated environments, `tenant1` and `tenant2`, e
 
 Both tenants have their own service accounts, roles, and role bindings, which grant permissions to manage pods within their respective namespaces.
 
-Additionally, both namespaces have a default network policy that denies all ingress and egress traffic by default, providing an additional layer of isolation and security for the applications running within the tenants.
-`tenant2` policies allow also intra-namespace comunications between frontend and backend.
+Additionally, both namespaces have a default network policy that denies all egress traffic by default, providing an additional layer of isolation and security for the applications running within the tenants.
+`tenant2` policies allow also intra-namespace comunications between frontend and backend and access from the outside.
