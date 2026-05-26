@@ -89,5 +89,6 @@ Basic tools required:
 python -m venv .venv
 .venv\\Scripts\\activate
 pip install -r requirements.txt
-python agent.py
+cd ./src
+fastapi dev
 ```
