@@ -47,11 +47,11 @@ def consistency_check(role: str):
 
         print(f"\nConsistency check for the prompt's {role}")
 
-        response = llm.invoke(message)
+        response = normalize_llm_content(llm.invoke(message).content)
 
-        if response.content.strip() != "VALID":
-            print(f"Prompt consistency check failed:\n{response.content}")
-            return {"feedback": f"Consistency Error: {response.content}",
+        if response.strip() != "VALID":
+            print(f"Prompt consistency check failed:\n{response}")
+            return {"feedback": f"Consistency Error: {response}",
                     "consistency": "INVALID"}
 
         print("PASSED")
@@ -83,21 +83,21 @@ def generator_node(state: AgentState):
     ]
         
     print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
-    #print(f"prompt: {message}\n ")
+    print(f"prompt: {message}\n ")
 
     try:
-        response = llm.invoke(message)
+        response = normalize_llm_content(llm.invoke(message).content)
     
     except (Exception) as e:
         print(f"LLM call failed:\n{e}")
         return {"feedback": "FAILED"}
 
     attempt = state["attempts"] + 1
-    #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response.content}\n--- End of YAML ---\n")
+    #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response}\n--- End of YAML ---\n")
     
-    file_path = write_yaml_to_file(response.content, attempt)
+    file_path = write_yaml_to_file(response, attempt)
 
-    return {"generated_yaml": response.content, 
+    return {"generated_yaml": response, 
             "yaml_path": file_path,
             "attempts": attempt}
 

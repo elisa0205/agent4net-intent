@@ -31,15 +31,38 @@ def load_prompt_config(path: str) -> dict:
 # If it does, it returns the cached instance. If not, it creates a new instance, stores it in the cache, and then returns it. 
 @lru_cache(maxsize=8)
 def create_llm(model_name: str) -> ChatLiteLLM:
+    print(f"Creating LLM for model: {model_name}")
+
     if model_name.startswith("watsonx/"):
 
         project_id = os.environ["WATSONX_PROJECT_ID"]
         os.environ["WATSONX_API_KEY"]
         os.environ["WATSONX_API_BASE"]
 
-        return ChatLiteLLM(model=model_name, project_id=project_id)
+        try:
+            return ChatLiteLLM(model=model_name, project_id=project_id)
+        except Exception as e:
+            print(f"Error creating LLM for model {model_name}: {e}")
+            
 
     if model_name.startswith("ollama/"):
         return ChatLiteLLM(model=model_name, streaming=False)
 
     raise ValueError(f"Unsupported model prefix for model: {model_name}")
+
+# Normalize LLM content to handle different response formats (string, list of dicts, etc.)
+def normalize_llm_content(content):
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                if item.get("type") == "text" and "text" in item:
+                    parts.append(item["text"])
+                elif "text" in item and item.get("type") is None:
+                    parts.append(item["text"])
+        return "".join(parts)
+
+    return str(content)
