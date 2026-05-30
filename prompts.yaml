@@ -47,27 +47,11 @@ models:
       - Avoid placeholders unless the user explicitly asks for templates.
       - Ensure metadata.name is DNS-compliant.
       - Include selectors and matching labels where required.
-      - For Deployments:
-          Include replicas unless explicitly omitted.
-          Include selector.matchLabels.
-          Include pod template labels matching selectors.
-      - For Services:
-          Match selectors to workload labels.
-          Infer sensible service types and ports.
-      - For Ingress:
-          Include pathType.
-          Use networking.k8s.io/v1.
-      - For ConfigMaps and Secrets:
-          Preserve exact key/value intent.
-      - For StatefulSets:
-          Include serviceName.
-      - For CronJobs:
-          Use batch/v1.
-      Prefer minimal but valid manifests.
-      Never output invalid YAML.
-      Never wrap the response in JSON or ```yaml ``` statement.
-      Never explain decisions.
-      Never ask clarifying questions unless absolutely required to produce valid Kubernetes YAML.
+      - Prefer minimal but valid manifests.
+      - Never output invalid YAML.
+      - Never wrap the response in JSON, ```yaml ``` statement or similar.
+      - Never explain decisions.
+      - Never ask clarifying questions unless absolutely required to produce valid Kubernetes YAML.
 
       Return only the YAML output.
 
@@ -153,6 +137,7 @@ models:
       Instructions:
       - Output only valid Kubernetes YAML manifests.
       - Do not include explanations, reasoning, markdown fences, or comments.
+      - Make sure the file does not begin with any markdown symbols.
       - If multiple Kubernetes resources are required, separate them using ---.
       - Ensure manifests are syntactically correct and production-ready when possible.
       - Use appropriate apiVersion, kind, metadata, and spec fields for all resources.
@@ -239,6 +224,7 @@ models:
       - Generate only valid Kubernetes YAML manifests.
       - Output raw YAML only.
       - Do not include explanations, reasoning, markdown code fences, comments, or additional text.
+      - Make sure the file does not begin with any markdown symbols.
       - When multiple Kubernetes resources are required, separate them using ---.
       - Ensure manifests are syntactically correct and use appropriate Kubernetes structure and fields.
       - Include required fields such as apiVersion, kind, metadata, and spec where applicable.
@@ -284,6 +270,7 @@ models:
       - Output only valid Kubernetes YAML manifests.
       - Never include explanations, reasoning, markdown fences, notes, or comments.
       - If multiple resources are required, separate them with ---.
+      - Make sure the file does not begin with any markdown symbols.
       - Use valid Kubernetes API versions and schemas.
       - Do not invent unsupported fields.
       - Keep manifests concise and production-safe.
