@@ -24,8 +24,8 @@ Given a natural language task, the agent:
 
 Contains the application source code of the agent:
 - `agent.py`: main script with agent state definition, LangGraph nodes, and loop logic.
-- `utils.py`: helper functions.
 - `main.py`: contains a FastAPI application that expose enpoints to connect to the agent.
+- `utils/`: folder with helper functions and testbed setup.
 
 ### configuration_examples/
 
@@ -72,7 +72,7 @@ flowchart TD
 - `scope_consistency_node`:Validates that the user's request is within the scope of the agent and blocks malicious or unrelated prompts invoking a LLM. If the prompt is invalid, the execution terminates immediately.
 - `generator_node`: Invokes the LLM using the user’s prompt, waits for the model’s response, and writes the generated YAML file that will be used in the subsequent validation steps. When validation errors occur, they are appended to the prompt so the model can refine the output in the next iteration.
 - `syntax_validation_node`: Uses `yamllint` to check the syntactic correctness of the generated YAML file. If no issues are found, execution proceeds to the next node; otherwise, the process returns to the generator node, adding the linting errors to the prompt.
-- `kubernetes_validator_node`: Runs `kubectl --dry-run= server` to validate the functional correctness of the configuration against a live `Minikube` cluster. If the configuration passes, the agent’s execution ends. If errors are detected, the process returns to the generator node, including the validation output in the prompt.
+- `kubernetes_validator_node`: Nodes to validate the functional correctness of the configuration against a live `Kind` cluster. Create a cluster, apply the manifest and then delete the cluster. If the configuration passes, the agent’s execution ends. If errors are detected, the process returns to the generator node, including the validation output in the prompt.
 - `semantic_consistency_node`: Validates semantic consistency between the user's requested intent and the generated Kubernetes YAML manifest. If the generated YAML does not match the requirements, execution returns to the generator node for refinement.
 
 ## Requirements
@@ -80,8 +80,7 @@ flowchart TD
 Basic tools required:
 - `Python 3.10+`
 - `yamllint` available in the Python environment
-- `kubectl` installed and configured against a reachable cluster using `minikube` 
-- `Ollama` running locally with the model configured in `agent_test.py`
+- `kubectl` installed and configured against a reachable cluster using `Kind` 
 
 ## Quick Start
 
