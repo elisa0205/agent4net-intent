@@ -1,9 +1,13 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
-from utils import *
+from utils import load_prompt_config, create_llm, normalize_llm_content, write_yaml_to_file
+from utils import KindCluster
+from pathlib import Path
 
 import subprocess
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # Agent State
@@ -20,7 +24,7 @@ class AgentState(TypedDict):
 #  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
 #  - "ollama/qwen3.5:0.8b"
 
-prompt_config = load_prompt_config("..\prompts.yaml")
+prompt_config = load_prompt_config(BASE_DIR / ".." / "prompts.yaml")
 
 # Nodes 
 def consistency_check(role: str):
@@ -73,7 +77,8 @@ def generator_node(state: AgentState):
 
     if state['feedback']:
         #Limit the feedback to the last 500 characters to avoid hitting token limits
-        feedback_snippet = state['feedback'][-500:]
+        #feedback_snippet = state['feedback'][-500:]
+        feedback_snippet = state['feedback']
         
         prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
     
@@ -137,21 +142,26 @@ def kubernetes_validator_node(state: AgentState):
 
     file_path = state['yaml_path']
 
-    result = subprocess.run(
-        ["kubectl", "apply",  "-f", file_path, "--dry-run=server"],
-        capture_output=True,
-        text=True
-    )
+    CLUSTER_CONFIG_PATH = BASE_DIR / "utils" / "cluster-config.yaml"
 
-    if result.returncode == 0:
-        print("PASSED")
-        return {"feedback": "VALID",
-                "attempts": state['attempts']}
-    else:
-        error_message = result.stdout + result.stderr
-        print(f"--- Error detected---\n {error_message} ---")
-        return {"feedback": f"Kubernetes Validation Error: {error_message}",
-                "attempts": state['attempts']}
+    try:
+        with KindCluster(config = CLUSTER_CONFIG_PATH) as kc:
+            try:
+                apply_result = kc.apply(file_path)
+                print("PASSED")
+                return {"feedback": "VALID",
+                        "attempts": state['attempts']}
+        
+            except subprocess.CalledProcessError as e:
+                # (getattr(e, "stdout", "") or "") + 
+                err = (getattr(e, "stderr", "") or "")
+                print(f"--- Error detected---\n {err} ---")
+                return {"feedback": f"Kubernetes Validation Error: {err}", 
+                        "attempts": state["attempts"]}
+    
+    except subprocess.CalledProcessError as e:
+        err = (getattr(e, "stdout", "") or "") + (getattr(e, "stderr", "") or "")
+        return {"feedback": f"Kind Creation Error: {err}"}
 
 
 # Logic
@@ -178,6 +188,9 @@ def kubernetes_should_continue(state: AgentState):
         return "semantic_consistency"
     elif state['attempts'] > 6:
         state['feedback'] = "FAILED: Maximum attempts reached"
+        return END
+    elif state['feedback'].startswith("Kind Creation Error"):
+        state['feedback'] = "FAILED: Kind cluster creation failed"
         return END
     return "generator"
 
