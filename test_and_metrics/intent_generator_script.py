@@ -13,7 +13,7 @@ project_id = os.environ["WATSONX_PROJECT_ID"]
 
 def generate_intent_from_manifests(state: AgentState) -> dict:
     
-    with open("./configuration_examples/postgres-example/complete.yaml", "r", encoding="utf-8") as f:
+    with open("../configuration_examples/postgres-example/complete.yaml", "r", encoding="utf-8") as f:
         testo = f.read()
 
     message = [
