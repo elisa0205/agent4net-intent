@@ -9,12 +9,15 @@ CSV_PATH = Path("expanded-dataset(in).csv")
 RESULTS_DIR = Path("test_and_metrics/results")
 
 
+#Simple tokenization to compute similarity 
 def tokenize(text):
     return set(text.lower().split())
 
+#Jaccard similarity between two sets of tokens
 def jaccard(a, b):
     return len(a & b) / len(a | b)
 
+#Load intents from the CSV file and group them by example name
 def load_intents(csv_path: Path) -> dict[str, list[str]]:
     grouped = defaultdict(list)
 
@@ -26,6 +29,7 @@ def load_intents(csv_path: Path) -> dict[str, list[str]]:
             grouped[example_name].append(intent_text)
     return dict(grouped)
 
+#Build similarity matrices for each example
 def build_similarity_matrices(intents_set: dict[str, list[str]]) -> dict[str, np.ndarray]:
     matrices = {}
 
@@ -42,6 +46,7 @@ def build_similarity_matrices(intents_set: dict[str, list[str]]) -> dict[str, np
 
     return matrices
 
+#Save the similarity matrices to text files for later analysis
 def save_similarity_matrices(similarity_matrices: dict[str, np.ndarray], method: str) -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -49,12 +54,14 @@ def save_similarity_matrices(similarity_matrices: dict[str, np.ndarray], method:
         output_path = RESULTS_DIR / f"{method}_similarity" / f"{example}_{method}_matrix.txt"
         np.savetxt(output_path, matrix, fmt="%.4f", delimiter="\t")
 
+#Build similarity matrices using SentenceTransformer embeddings
 def build_sentence_transformer_similarity_matrices(intents_set: dict[str, list[str]], model_name: str) -> dict[str, np.ndarray]:
     model = SentenceTransformer(model_name)
     matrices = {}
 
     for example, intents in intents_set.items():
         embeddings = model.encode(intents)
+        # By default, the similarity method in SentenceTransformer computes cosine similarity
         similarity_matrix = model.similarity(embeddings, embeddings)
         matrices[example] = similarity_matrix.cpu().numpy()
 
