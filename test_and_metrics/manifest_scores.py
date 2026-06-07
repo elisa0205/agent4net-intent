@@ -1,4 +1,4 @@
-from metrics import bleu
+from metrics import bleu, edit_distance
 
 generated_example = """apiVersion: apps/v1
 kind: Deployment
@@ -51,5 +51,9 @@ spec:
               containerPort: 80"""
 
 if __name__ == "__main__":
+
     bleu_score = bleu.test(generated_example, reference_example)
     print(f"BLEU score: {bleu_score:.4f}")
+ 
+    edit_distance_score = edit_distance.test(generated_example, reference_example)
+    print(f"Edit Distance score: {edit_distance_score}")
