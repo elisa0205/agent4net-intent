@@ -147,7 +147,7 @@ def kubernetes_validator_node(state: AgentState):
     try:
         with KindCluster(config = CLUSTER_CONFIG_PATH) as kc:
             try:
-                apply_result = kc.apply(file_path)
+                kc.apply(file_path)
                 print("PASSED")
                 return {"feedback": "VALID",
                         "attempts": state['attempts']}
