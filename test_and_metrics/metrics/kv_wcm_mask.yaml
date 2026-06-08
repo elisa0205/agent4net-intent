@@ -1,0 +1,10 @@
+wildcard_paths:
+  - metadata.name
+  - metadata.labels.app
+  - metadata.labels.tier
+  - spec.selector.matchLabels.app
+  - spec.selector.matchLabels.tier
+  - spec.template.metadata.labels.app
+  - spec.template.metadata.labels.tier
+  - spec.template.spec.containers[*].name
+  - spec.template.spec.containers[*].image

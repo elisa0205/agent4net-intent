@@ -1,4 +1,4 @@
-from metrics import bleu, edit_distance, exact_match, kv_match
+from metrics import bleu, edit_distance, exact_match, kv_match, kv_wildcard
 
 generated_example = """apiVersion: apps/v1
 kind: Deployment
@@ -56,10 +56,13 @@ if __name__ == "__main__":
     print(f"BLEU score: {bleu_score:.4f}")
  
     edit_distance_score = edit_distance.test(generated_example, reference_example)
-    print(f"Edit Distance score: {edit_distance_score}")
+    print(f"Edit Distance score: {edit_distance_score:.4f}")
 
     exact_match_score = exact_match.test(generated_example, reference_example)
     print(f"Exact Match score: {exact_match_score}")
 
     kv_match_score = kv_match.test(generated_example, reference_example)
     print(f"KV Match score: {kv_match_score}")
+
+    kv_wildcard_score = kv_wildcard.test(generated_example, reference_example)
+    print(f"KV Wildcard score: {kv_wildcard_score:.4f}")
