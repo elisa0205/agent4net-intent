@@ -1,4 +1,4 @@
-from metrics import bleu, edit_distance, exact_match, kv_match, kv_wildcard
+from metrics import bleu, edit_distance, exact_match, kv_match, kv_wildcard, label_match
 
 generated_example = """apiVersion: v1
 kind: Namespace
@@ -303,8 +303,13 @@ if __name__ == "__main__":
     exact_match_score = exact_match.test(generated_example, reference_example)
     print(f"Exact Match score: {exact_match_score}")
 
+    label_match_score = label_match.test(generated_example, reference_example)
+    print(f"Label Match score: {label_match_score:.4f}")
+
     kv_match_score = kv_match.test(generated_example, reference_example)
     print(f"KV Match score: {kv_match_score:.4f}")
 
     kv_wildcard_score = kv_wildcard.test(generated_example, reference_example)
     print(f"KV Wildcard score: {kv_wildcard_score:.4f}")
+
+
