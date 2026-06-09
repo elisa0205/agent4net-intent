@@ -49,8 +49,9 @@ def test(result_str="", reference_str=""):
     if total_diff_items == 0:
         return 1.0
 
-    reference_items = count_leaf_items(yaml.safe_load(reference_str))
-    print(f"Total diff items: {total_diff_items}, Reference items: {reference_items}")
+    reference_docs = list(yaml.safe_load_all(reference_str))
+    reference_items = sum(count_leaf_items(doc) for doc in reference_docs if doc is not None)
+    #print(f"Total diff items: {total_diff_items}, Reference items: {reference_items}")
 
     # Normalize the similarity score to be between 0 and 1
     similarity = 1 - (total_diff_items / reference_items) if reference_items > 0 else 1.0
