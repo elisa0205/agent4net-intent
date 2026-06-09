@@ -1,10 +1,15 @@
 wildcard_paths:
   - metadata.name
+  - metadata.namespace
   - metadata.labels.app
   - metadata.labels.tier
+  - metadata.labels.environment
+  - metadata.annotations
+  - spec.selector.app
   - spec.selector.matchLabels.app
   - spec.selector.matchLabels.tier
   - spec.template.metadata.labels.app
   - spec.template.metadata.labels.tier
   - spec.template.spec.containers[*].name
   - spec.template.spec.containers[*].image
+  - spec.ports[*].name
