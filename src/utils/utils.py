@@ -40,7 +40,7 @@ def create_llm(model_name: str) -> ChatLiteLLM:
         os.environ["WATSONX_API_BASE"]
 
         try:
-            return ChatLiteLLM(model=model_name, project_id=project_id)
+            return ChatLiteLLM(model=model_name, project_id=project_id, max_tokens=4096)
         except Exception as e:
             print(f"Error creating LLM for model {model_name}: {e}")
             

@@ -88,7 +88,7 @@ def generator_node(state: AgentState):
     ]
         
     print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
-    print(f"prompt: {message}\n ")
+    #print(f"prompt: {message}\n ")
 
     try:
         response = normalize_llm_content(llm.invoke(message).content)
