@@ -49,7 +49,7 @@ models:
       - Include selectors and matching labels where required.
       - Prefer minimal but valid manifests.
       - Never output invalid YAML.
-      - Never wrap the response in JSON, ```yaml ``` statement or similar.
+      - Do not start the response with '`' or '```'.
       - Never explain decisions.
       - Never ask clarifying questions unless absolutely required to produce valid Kubernetes YAML.
 
@@ -137,7 +137,7 @@ models:
       Instructions:
       - Output only valid Kubernetes YAML manifests.
       - Do not include explanations, reasoning, markdown fences, or comments.
-      - Make sure the file does not begin with any markdown symbols.
+      - Do not start the response with '`' or '```'.
       - If multiple Kubernetes resources are required, separate them using ---.
       - Ensure manifests are syntactically correct and production-ready when possible.
       - Use appropriate apiVersion, kind, metadata, and spec fields for all resources.
@@ -184,6 +184,7 @@ models:
         - Ensure all manifests are syntactically valid and properly structured.
         - Include appropriate Kubernetes fields such as apiVersion, kind, metadata, and spec.
         - Never output anything other than raw YAML manifests.
+        - Do not start the response with '`' or '```'.
 
       scope_consistency: |
         You are an AI assistant acting as a security and scope validation gate for a Kubernetes YAML generator.
@@ -191,7 +192,7 @@ models:
         - Evaluate whether the user request is specifically related to Kubernetes manifests, Kubernetes resources, Helm charts, deployment configuration, or closely related infrastructure configuration tasks.
         - Return only one of the following responses:
           VALID
-          INVALID: <short reason>
+          INVALID: <reason>
         - Do not include explanations, reasoning, markdown, comments, or additional text.
         - Reject requests unrelated to Kubernetes or deployment configuration.
         - Reject requests involving malware, exploits, viruses, credential theft, destructive activity, or harmful content unrelated to Kubernetes operations.
@@ -206,7 +207,7 @@ models:
         - Evaluate whether the YAML correctly implements the requested Kubernetes behavior and infrastructure configuration.
         - Return only one of the following responses:
           VALID
-          INVALID: <short reason>
+          INVALID: <reason>
         - Do not include explanations, reasoning, markdown, comments, or additional text.
         - Mark the result as invalid if:
           Required resources are missing.
@@ -224,7 +225,7 @@ models:
       - Generate only valid Kubernetes YAML manifests.
       - Output raw YAML only.
       - Do not include explanations, reasoning, markdown code fences, comments, or additional text.
-      - Make sure the file does not begin with any markdown symbols.
+      - Do not start the response with '`' or '```'.
       - When multiple Kubernetes resources are required, separate them using ---.
       - Ensure manifests are syntactically correct and use appropriate Kubernetes structure and fields.
       - Include required fields such as apiVersion, kind, metadata, and spec where applicable.
@@ -270,7 +271,7 @@ models:
       - Output only valid Kubernetes YAML manifests.
       - Never include explanations, reasoning, markdown fences, notes, or comments.
       - If multiple resources are required, separate them with ---.
-      - Make sure the file does not begin with any markdown symbols.
+      - Do not start the response with '`' or '```'.
       - Use valid Kubernetes API versions and schemas.
       - Do not invent unsupported fields.
       - Keep manifests concise and production-safe.

@@ -50,10 +50,28 @@ def create_llm(model_name: str) -> ChatLiteLLM:
 
     raise ValueError(f"Unsupported model prefix for model: {model_name}")
 
+# Strip markdown YAML fences from the LLM response to ensure we get clean YAML content
+def strip_yaml_fences(content: str) -> str:
+    stripped = content.strip()
+
+    if stripped.startswith("```yml"):
+        stripped = stripped[len("```yml"):].lstrip()
+
+    if stripped.startswith("```yaml"):
+        stripped = stripped[len("```yaml"):].lstrip()
+
+    if stripped.startswith("```"):
+        stripped = stripped[len("```"):].lstrip()
+
+    if stripped.endswith("```"):
+        stripped = stripped[:-len("```")].rstrip()
+
+    return stripped
+
 # Normalize LLM content to handle different response formats (string, list of dicts, etc.)
 def normalize_llm_content(content):
     if isinstance(content, str):
-        return content
+        return strip_yaml_fences(content)
 
     if isinstance(content, list):
         parts = []
@@ -65,4 +83,4 @@ def normalize_llm_content(content):
                     parts.append(item["text"])
         return "".join(parts)
 
-    return str(content)
+    return strip_yaml_fences(str(content))
