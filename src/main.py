@@ -18,7 +18,7 @@ class AgentResponse(BaseModel):
     consistency: str
 
 
-@app.post("/generate_yaml")
+@app.post("/manifest")
 async def generate_yaml(request: AgentRequest) -> AgentResponse:
 
     input = {
