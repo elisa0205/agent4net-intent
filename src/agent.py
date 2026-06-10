@@ -91,7 +91,10 @@ def generator_node(state: AgentState):
     #print(f"prompt: {message}\n ")
 
     try:
-        response = normalize_llm_content(llm.invoke(message).content)
+        response = llm.invoke(message)
+        #print(f"LLM metadata:\n{response}\n")
+        response = normalize_llm_content(response.content)
+
     
     except (Exception) as e:
         print(f"LLM call failed:\n{e}")
@@ -169,6 +172,7 @@ def scope_consistency_should_continue(state: AgentState):
     if state['consistency'] == "INVALID":
         return END
     return "generator"
+    
 
 def generator_should_continue(state: AgentState):
     if state["feedback"] == "FAILED":
