@@ -7,7 +7,7 @@ from langchain_litellm import ChatLiteLLM
 # From generated agent text to file 
 def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
 
-    results_dir = "..\\results"
+    results_dir = "..\\results_temp"
     os.makedirs(results_dir, exist_ok=True)
     filename = os.path.join(results_dir, f"config_attempt_{attempt}.yaml")
 
@@ -30,7 +30,7 @@ def load_prompt_config(path: str) -> dict:
 # When the function is called with a model name, it checks if an instance of that model already exists in the cache. 
 # If it does, it returns the cached instance. If not, it creates a new instance, stores it in the cache, and then returns it. 
 @lru_cache(maxsize=8)
-def create_llm(model_name: str) -> ChatLiteLLM:
+def create_llm(model_name: str, temp: float) -> ChatLiteLLM:
     print(f"Creating LLM for model: {model_name}")
 
     if model_name.startswith("watsonx/"):
@@ -40,13 +40,13 @@ def create_llm(model_name: str) -> ChatLiteLLM:
         os.environ["WATSONX_API_BASE"]
 
         try:
-            return ChatLiteLLM(model=model_name, project_id=project_id, max_tokens=4096)
+            return ChatLiteLLM(model=model_name, project_id=project_id, max_tokens=4096, temperature=temp)
         except Exception as e:
             print(f"Error creating LLM for model {model_name}: {e}")
             
 
     if model_name.startswith("ollama/"):
-        return ChatLiteLLM(model=model_name, streaming=False)
+        return ChatLiteLLM(model=model_name, streaming=False, temperature=temp)
 
     raise ValueError(f"Unsupported model prefix for model: {model_name}")
 

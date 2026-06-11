@@ -6,4 +6,5 @@ __pycache__/
 .DS_Store
 /information.zip
 *.csv
-/.results/
+/results/
+/results_temp/
