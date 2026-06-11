@@ -8,6 +8,7 @@ app = FastAPI()
 class AgentRequest(BaseModel):
     task: str
     model_name: str
+    temperature: float = 0.7 #default temperature 0.7
 
 # Response Model
 class AgentResponse(BaseModel):
@@ -28,7 +29,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
         "yaml_path": "",
         "attempts": 0,
         "feedback": "",
-        "consistency": ""
+        "consistency": "",
+        "temperature": request.temperature
     }
 
     try:

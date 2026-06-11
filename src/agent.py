@@ -19,10 +19,8 @@ class AgentState(TypedDict):
     feedback: str
     attempts: int
     consistency: str
-
-# Models one of:
-#  - "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
-#  - "ollama/qwen3.5:0.8b"
+    temperature: float
+    
 
 prompt_config = load_prompt_config(BASE_DIR / ".." / "prompts.yaml")
 
@@ -31,7 +29,7 @@ def consistency_check(role: str):
 
     def consistency_node(state: AgentState):
         
-        llm = create_llm(state["model_name"])
+        llm = create_llm(state["model_name"], state["temperature"])
 
         if role == "semantic":
             prompt = f"Task: {state['task']}\n\nGenerated YAML:\n{state['generated_yaml']}"
@@ -70,7 +68,7 @@ semantic_consistency_node = consistency_check("semantic")
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
-    llm = create_llm(state["model_name"])
+    llm = create_llm(state["model_name"], state["temperature"])
 
     prompt = f"Task: {state['task']}\n"
     system_prompt = prompt_config["models"][state['model_name']]["generator"]

@@ -43,12 +43,13 @@ def load_intents(csv_path: Path) -> dict[str, list[str]]:
             grouped[(example_name, model_name)].append(intent_text)
     return dict(grouped)
 
-def generate_manifest(task, model_name):
+def generate_manifest(task, model_name, temperature):
     url = "http://127.0.0.1:8000/manifest"
 
     payload = {
         "task": task,
-        "model_name": model_name
+        "model_name": model_name,
+        "temperature": temperature
     }
 
     try:
@@ -67,8 +68,8 @@ def generate_manifest(task, model_name):
 
 if __name__ == "__main__":
     
-    model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
-    temperature = None
+    model_name = "watsonx/ibm/granite-4-h-small"
+    temperature = 0.7 # default temperature 0.7
 
     intents = load_intents(CSV_PATH)
     
@@ -76,7 +77,7 @@ if __name__ == "__main__":
         iteration = 0
         for task in tasks:
             iteration += 1
-            result = generate_manifest(task, model_name)
+            result = generate_manifest(task, model_name, temperature)
             if result is not None:
                 yaml_content = result.get("generated_yaml", "")
                 attempts = result.get("attempts", 0)
