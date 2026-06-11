@@ -27,7 +27,7 @@ Contains the application source code of the agent:
 - `main.py`: contains a FastAPI application that expose enpoints to connect to the agent.
 - `utils/`: folder with helper functions and testbed setup.
 
-### test_and_metrics
+### test_and_metrics/
 
 Contains all scripts used to test and evaluate the agent’s performance.
 Includes a `metrics/` directory with the scripts required to compute evaluation metrics on the generated manifests.
