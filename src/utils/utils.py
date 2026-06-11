@@ -7,7 +7,7 @@ from langchain_litellm import ChatLiteLLM
 # From generated agent text to file 
 def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
 
-    results_dir = "..\\results"
+    results_dir = "..\\results_temp"
     os.makedirs(results_dir, exist_ok=True)
     filename = os.path.join(results_dir, f"config_attempt_{attempt}.yaml")
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from agent import app as agent_app
 
@@ -34,6 +34,12 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
     try:
         
         final_state = agent_app.invoke(input)
+        feedback = final_state.get("feedback", "")
+
+        if feedback.startswith("FAILED"):
+            raise HTTPException(status_code=400, detail=feedback)
+        elif final_state.get("consistency", "") == "INVALID":
+            raise HTTPException(status_code=400, detail="Consistency check failed: " + feedback)
 
         return AgentResponse(
             generated_yaml=final_state.get("generated_yaml", ""),
@@ -43,11 +49,7 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
             consistency=final_state.get("consistency", "")
         )
     
+    except HTTPException:
+        raise
     except Exception as e:
-        return AgentResponse(
-            generated_yaml="",
-            yaml_path="",
-            attempts=0,
-            feedback=f"FAILED: {str(e)}",
-            consistency=""
-        )
+        raise HTTPException(status_code=500, detail=str(e))
