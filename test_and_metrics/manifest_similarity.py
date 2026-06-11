@@ -1,296 +1,124 @@
 from metrics import bleu, edit_distance, exact_match, kv_match, kv_wildcard, label_match
 
-generated_example = """apiVersion: v1
-kind: Namespace
-metadata:
-  name: development
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: production
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: dev-quota
-  namespace: development
-spec:
-  hard:
-    pods: "1"
-    requests.cpu: "0.5"
-    requests.memory: "512Mi"
-    limits.cpu: "1"
-    limits.memory: "1Gi"
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: prod-quota
-  namespace: production
-spec:
-  hard:
-    pods: "2"
-    requests.cpu: "1"
-    requests.memory: "1Gi"
-    limits.cpu: "2"
-    limits.memory: "2Gi"
----
-apiVersion: apps/v1
+generated_example = """apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
-  namespace: development
+  name: cpu-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: myapp
+      app: cpu-demo
   template:
     metadata:
       labels:
-        app: myapp
+        app: cpu-demo
     spec:
       containers:
-      - name: myapp
-        image: myapp:latest
+      - name: cpu-demo
+        image: gcr.io/google-samples/hpa-example
         ports:
         - containerPort: 80
         resources:
           requests:
-            cpu: 0.1
-            memory: 128Mi
+            cpu: 200m
           limits:
-            cpu: 0.5
-            memory: 512Mi
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 10
+            cpu: 500m
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: myapp
-  namespace: production
+  name: cpu-demo-hpa
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: myapp
-  template:
-    metadata:
-      labels:
-        app: myapp
-    spec:
-      containers:
-      - name: myapp
-        image: myapp:latest
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            cpu: 0.5
-            memory: 512Mi
-          limits:
-            cpu: 1
-            memory: 1Gi
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cpu-demo
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: myapp
-  namespace: development
+  name: cpu-demo-svc
 spec:
   selector:
-    app: myapp
+    app: cpu-demo
   ports:
-  - name: http
-    port: 80
-    targetPort: 80
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp
-  namespace: production
-spec:
-  selector:
-    app: myapp
-  ports:
-  - name: http
-    port: 80
+  - port: 8080
     targetPort: 80
   type: ClusterIP
 """
-reference_example = """apiVersion: v1
-kind: Namespace
-metadata:
-  name: dev
-  labels:
-    environment: development
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: dev-quota
-  namespace: dev
-spec:
-  hard:
-    requests.cpu: "1"
-    requests.memory: 1Gi
-    limits.cpu: "2"
-    limits.memory: 2Gi
----
-apiVersion: apps/v1
+reference_example = """apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp-deployment
-  namespace: dev
-  labels:
-    app: myapp
-    environment: development
+  name: cpu-demo
 spec:
-  replicas: 1 
+  replicas: 1
   selector:
     matchLabels:
-      app: myapp
+      app: cpu-demo
   template:
     metadata:
       labels:
-        app: myapp
-        environment: development
+        app: cpu-demo
     spec:
       containers:
-        - name: myapp-container
-          image: nginx:latest
-          ports:
-            - containerPort: 80
-          resources:
-            requests:
-              cpu: "50m"
-              memory: "64Mi"
-            limits:
-              cpu: "200m"
-              memory: "128Mi"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 3
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 15
+      - name: cpu-demo
+        image: nginx:latest
+        resources:
+          requests:
+            cpu: 200m
+          limits:
+            cpu: 500m
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: myapp-service
-  namespace: dev
-  labels:
-    app: myapp
-    environment: development
+  name: cpu-demo-svc
 spec:
-  type: ClusterIP 
   selector:
-    app: myapp
+    app: cpu-demo
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
 ---
-apiVersion: v1
-kind: Namespace
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: prod
-  labels:
-    environment: production
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-  name: prod-quota
-  namespace: prod
+  name: cpu-demo-hpa
 spec:
-  hard:
-    requests.cpu: "2"
-    requests.memory: 2Gi
-    limits.cpu: "3"
-    limits.memory: 2Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: myapp-deployment
-  namespace: prod
-  labels:
-    app: myapp
-    environment: production
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: myapp
-  template:
-    metadata:
-      labels:
-        app: myapp
-        environment: production
-    spec:
-      containers:
-        - name: myapp-container
-          image: nginx:latest
-          ports:
-            - containerPort: 80
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 15
-            periodSeconds: 20
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: myapp-service
-  namespace: prod
-  labels:
-    app: myapp
-    environment: production
-spec:
-  type: ClusterIP 
-  selector:
-    app: myapp
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80"""
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cpu-demo
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30"""
+
+'''
+RESULTS:
+  BLEU score: 0.8635
+  Edit Distance score: 0.6222
+  Exact Match score: False
+  Label Match score: 0.9655
+  KV Match score: 0.6552
+  KV Wildcard score: 0.8966
+'''
 
 if __name__ == "__main__":
 
