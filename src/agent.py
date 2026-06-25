@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
-from utils import load_prompt_config, create_llm, normalize_llm_content, write_yaml_to_file
+from utils import load_prompt_config, create_llm, normalize_llm_content, write_yaml_to_file, extract_usage_tokens
 from utils import KindCluster
 from pathlib import Path
 
@@ -20,7 +20,7 @@ class AgentState(TypedDict):
     attempts: int
     consistency: str
     temperature: float
-    
+    token_usage: int
 
 prompt_config = load_prompt_config(BASE_DIR / ".." / "prompts.yaml")
 
@@ -49,7 +49,12 @@ def consistency_check(role: str):
 
         print(f"\nConsistency check for the prompt's {role}")
 
-        response = normalize_llm_content(llm.invoke(message).content)
+        response = llm.invoke(message)
+        #print(response)
+        tokens = state["token_usage"] + extract_usage_tokens(response)
+        #print(f"Token usage:{response.usage_metadata['total_tokens']}\n")
+
+        response = normalize_llm_content(response.content)
 
         if response.strip() != "VALID":
             print(f"Prompt consistency check failed:\n{response}")
@@ -57,7 +62,8 @@ def consistency_check(role: str):
                     "consistency": "INVALID"}
 
         print("PASSED")
-        return {"consistency": "VALID"}   
+        return {"consistency": "VALID",
+                "token_usage": tokens}   
     
     return consistency_node
     
@@ -90,7 +96,10 @@ def generator_node(state: AgentState):
 
     try:
         response = llm.invoke(message)
+        #print(f"LLM response:\n{response}\n")
+        tokens = state["token_usage"] + extract_usage_tokens(response)
         #print(f"LLM metadata:\n{response}\n")
+
         response = normalize_llm_content(response.content)
 
     
@@ -105,7 +114,8 @@ def generator_node(state: AgentState):
 
     return {"generated_yaml": response, 
             "yaml_path": file_path,
-            "attempts": attempt}
+            "attempts": attempt,
+            "token_usage": tokens}
 
 
 def syntax_validator_node(state: AgentState):

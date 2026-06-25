@@ -17,6 +17,7 @@ class AgentResponse(BaseModel):
     attempts: int
     feedback: str
     consistency: str
+    token_usage: int
 
 
 @app.post("/manifest")
@@ -30,7 +31,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
         "attempts": 0,
         "feedback": "",
         "consistency": "",
-        "temperature": request.temperature
+        "temperature": request.temperature,
+        "token_usage": 0
     }
 
     try:
@@ -48,7 +50,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
             yaml_path=final_state.get("yaml_path", ""),
             attempts=final_state.get("attempts", 0),
             feedback=final_state.get("feedback", ""),
-            consistency=final_state.get("consistency", "")
+            consistency=final_state.get("consistency", ""),
+            token_usage=final_state.get("token_usage", 0)
         )
     
     except HTTPException:

@@ -1,5 +1,5 @@
-
 import os
+from litellm import Usage
 import yaml
 from functools import lru_cache
 from langchain_litellm import ChatLiteLLM
@@ -84,3 +84,11 @@ def normalize_llm_content(content):
         return "".join(parts)
 
     return strip_yaml_fences(str(content))
+
+
+def extract_usage_tokens(response):
+    meta = response.usage_metadata
+    if hasattr(meta, 'total_tokens'):
+        return meta.total_tokens
+    return meta.get('total_tokens')
+
