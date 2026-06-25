@@ -64,6 +64,7 @@ def _apply_compiled_wildcards(leaf_nodes, compiled_patterns: List[List[str]]):
 
 def _calc_differences(target_leaf_nodes, reference_leaf_nodes):
 
+    # Asymmetric comparison
     diff_count = 0
     for path, target_entries in target_leaf_nodes.items():
         if path not in reference_leaf_nodes:
@@ -84,13 +85,6 @@ def _calc_differences(target_leaf_nodes, reference_leaf_nodes):
                 #print(f"Value mismatch at path {path}, target value: {tgt_entry['value']}, reference values: {[ref_entry['value'] for ref_entry in ref_entries]}, diff +1")
                 break
         
-    for path, ref_entries in reference_leaf_nodes.items():
-        if path not in target_leaf_nodes:
-            if ref_entries[0]['wildcard']:
-                continue
-            diff_count += len(ref_entries)
-            #print(f"Path {path} missing in target, diff +{len(ref_entries)}")
-            continue
 
     return diff_count
 

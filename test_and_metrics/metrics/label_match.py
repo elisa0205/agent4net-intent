@@ -38,6 +38,7 @@ def _build_leaf_index(leaf_nodes):
 
 def _calc_differences(target_leaf_nodes, reference_leaf_nodes):
 
+    # Asymmetric comparison
     diff_count = 0
     for path, target_entries in target_leaf_nodes.items():
         if path not in reference_leaf_nodes:
@@ -45,12 +46,6 @@ def _calc_differences(target_leaf_nodes, reference_leaf_nodes):
             #print(f"Path {path} not in reference, diff +{len(target_entries)}")
             continue
 
-        
-    for path, ref_entries in reference_leaf_nodes.items():
-        if path not in target_leaf_nodes:
-            diff_count += len(ref_entries)
-            #print(f"Path {path} missing in target, diff +{len(ref_entries)}")
-            continue
 
     return diff_count
 

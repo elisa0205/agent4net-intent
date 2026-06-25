@@ -113,6 +113,7 @@ spec:
 '''
 RESULTS:
   BLEU score: 0.8635
+  codeBLEU score: 0.6934
   Edit Distance score: 0.6222
   Exact Match score: False
   Label Match score: 0.9655
