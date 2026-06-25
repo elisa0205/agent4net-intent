@@ -11,76 +11,48 @@ PACKAGE_DIR = Path(__file__).parent
 
 _TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_.:/-]+|[{}\[\],?:-]")
 
-YAML_KEYWORDS = {
-    "apiversion",
-    "kind",
-    "metadata",
-    "spec",
-    "name",
-    "namespace",
-    "labels",
-    "annotations",
-    "selector",
-    "template",
-    "containers",
-    "initcontainers",
-    "image",
-    "ports",
-    "env",
-    "envfrom",
-    "volumeMounts",
-    "volumes",
-    "replicas",
-    "matchlabels",
-    "type",
-    "data",
-    "stringdata",
-    "persistentvolumeclaim",
-    "service",
-    "ingress",
-    "deployment",
-    "statefulset",
-    "daemonset",
-    "cronjob",
-    "configmap",
-    "secret",
-    "serviceaccountname",
-    "resources",
-    "requests",
-    "limits",
-    "hosts",
-    "host",
-    "path",
-    "paths",
-    "pathType",
-    "rules",
-    "tls",
-    "backend",
-    "jobtemplate",
-    "restartpolicy",
-    "imagepullpolicy",
-    "nodeselector",
-    "affinity",
-    "tolerations",
-    "policytypes",
-    "podselector",
-    "ingressclassname",
-    "true",
-    "false",
-    "null",
-    "~",
-    "yes",
-    "no",
-    "on",
-    "off",
-    "-",
-    ":",
-    "{",
-    "}",
-    "[",
-    "]",
-    ",",
-    "?",
+# Critical for the structure → high weight (2.0)
+HIGH_PRIORITY = {
+    "apiversion", "kind", "metadata", "spec",
+    "containers", "initcontainers", "template", "selector",
+    "ingress", "egress", "rules", "ports",
+    "volumes", "volumemounts", "persistentvolumeclaim",
+    "securitycontext", "serviceaccountname", "rbac",
+    "nodeselector", "affinity", "tolerations", "nodename",
+}
+
+# Important but not critical → medium weight (1.0)
+MEDIUM_PRIORITY = {
+    "name", "namespace", "labels", "annotations",
+    "image", "command", "args", "workingdir",
+    "env", "envfrom", "ports", "lifecycle",
+    "resources", "requests", "limits",
+    "cpu", "memory", "storage",
+    "replicas", "minreplicas", "maxreplicas",
+    "livenessprobe", "readinessprobe", "startupprobe",
+    "httppget", "tcpsocket", "exec",
+    "storageclass", "accessmodes", "volumename",
+    "persistentvolume", "capacity",
+    "servicename", "clusterip", "loadbalancer",
+    "targetport", "nodeport", "protocol",
+    "host", "hosts", "path", "paths", "pathtype",
+    "ingressclassname", "tls",
+    "restartpolicy", "imagepullpolicy", "imagepullsecrets",
+    "terminationgraceperiodseconds",
+    "schedule", "jobtemplate", "completions", "parallelism",
+    "backofflimit", "activedeadlineseconds",
+    "data", "stringdata", "binarydata",
+    "rules", "verbs", "resources", "apiroups",
+    "subjects", "roleref",
+    "scaledobject", "metrics", "targetvalue",
+}
+
+# Generic YAML syntax → low weight (0.5)
+# Document structure, not K8s semantics
+LOW_PRIORITY = {
+    "true", "false", "null", "~", "yes", "no", "on", "off",
+    "-", ":", "{", "}", "[", "]", ",", "?", "|", ">",
+    "---", "...",
 }
 
 
@@ -102,10 +74,19 @@ def _tokenize_yaml(text: str) -> List[str]:
 
 
 def _build_keyword_weights(reference_tokens: List[str]) -> Dict[str, float]:
-    return {
-        token: 1.0 if token.rstrip(":") in YAML_KEYWORDS else 0.2
-        for token in reference_tokens
-    }
+    weights = {}
+    for token in reference_tokens:
+        token_clean = token.rstrip(":")
+        if token_clean in HIGH_PRIORITY:
+            weight = 2.0
+        elif token_clean in MEDIUM_PRIORITY:
+            weight = 1.0
+        elif token_clean in LOW_PRIORITY:
+            weight = 0.5
+        else:
+            weight = 0.2
+        weights[token] = weight
+    return weights
 
 
 def _get_all_subtrees(root_node) -> List[str]:
