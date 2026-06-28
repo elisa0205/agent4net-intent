@@ -14,11 +14,11 @@ _TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_.:/-]+|[{}\[\],?:-]")
 # Critical for the structure → high weight (2.0)
 HIGH_PRIORITY = {
     "apiversion", "kind", "metadata", "spec",
-    "containers", "initcontainers", "template", "selector",
+    "containers", "initcontainers", "template", "selector", "matchlabels",
     "ingress", "egress", "rules", "ports",
     "volumes", "volumemounts", "persistentvolumeclaim",
-    "securitycontext", "serviceaccountname", "rbac",
-    "nodeselector", "affinity", "tolerations", "nodename",
+    "securitycontext", "serviceaccountname",
+    "nodeselector", "affinity", "tolerations", "nodename", "jobtemplate"
 }
 
 # Important but not critical → medium weight (1.0)
@@ -27,24 +27,25 @@ MEDIUM_PRIORITY = {
     "image", "command", "args", "workingdir",
     "env", "envfrom", "ports", "lifecycle",
     "resources", "requests", "limits",
-    "cpu", "memory", "storage",
+    "cpu", "memory", "storage", "ephemeralstorage",
     "replicas", "minreplicas", "maxreplicas",
     "livenessprobe", "readinessprobe", "startupprobe",
-    "httppget", "tcpsocket", "exec",
+    "httpget", "tcpsocket", "exec", "periodseconds", "timeoutseconds", "failurethreshold",
     "storageclass", "accessmodes", "volumename",
     "persistentvolume", "capacity",
-    "servicename", "clusterip", "loadbalancer",
+    "servicename", "clusterip", "loadbalancer", "externalname",
     "targetport", "nodeport", "protocol",
     "host", "hosts", "path", "paths", "pathtype",
     "ingressclassname", "tls",
     "restartpolicy", "imagepullpolicy", "imagepullsecrets",
-    "terminationgraceperiodseconds",
+    "terminationgraceperiodseconds", "dnspolicy",
     "schedule", "jobtemplate", "completions", "parallelism",
-    "backofflimit", "activedeadlineseconds",
-    "data", "stringdata", "binarydata",
-    "rules", "verbs", "resources", "apiroups",
+    "backofflimit", "activedeadlineseconds", "successfuljobshistorylimit", "failedjobshistorylimit",
+    "data", "stringdata", "binarydata", "type",
+    "rules", "verbs", "resources", "apigroups",
     "subjects", "roleref",
-    "scaledobject", "metrics", "targetvalue",
+    "scaledobject", "metrics", "averageutilization", "averagevalue", "targetvalue",  # ← FIX nomi corretti
+    "scaletargetref"
 }
 
 # Generic YAML syntax → low weight (0.5)
