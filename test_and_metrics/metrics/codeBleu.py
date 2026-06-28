@@ -62,16 +62,13 @@ def build_yaml_parser() -> Parser:
     parser.set_language(language)
     return parser
 
-
 def _normalize_references(
     references: Union[List[str], List[List[str]]],
 ) -> List[List[str]]:
     return [[ref.strip() for ref in sample] if isinstance(sample, list) else [sample.strip()] for sample in references]
 
-
 def _tokenize_yaml(text: str) -> List[str]:
     return [token.lower() for token in _TOKEN_PATTERN.findall(text)]
-
 
 def _build_keyword_weights(reference_tokens: List[str]) -> Dict[str, float]:
     weights = {}
@@ -87,7 +84,6 @@ def _build_keyword_weights(reference_tokens: List[str]) -> Dict[str, float]:
             weight = 0.2
         weights[token] = weight
     return weights
-
 
 def _get_all_subtrees(root_node) -> List[str]:
     subtrees: List[str] = []
@@ -106,6 +102,35 @@ def _get_all_subtrees(root_node) -> List[str]:
 
     return subtrees
 
+# Return a signature string for a given node, representing its type and the signatures of its children.
+# This function is introduce to match the stucture of the tree ignoring the order of trees in the structure
+def _node_signature(node) -> str:
+    if node.child_count == 0:
+        # Leaf node
+        return f"{node.type}:{node.text.decode('utf8').lower()}"
+    
+    # Internal node: recursion on children
+    children_sig = ",".join(
+        _node_signature(c) for c in node.children 
+        if c.type != "comment"
+    )
+    return f"{node.type}({children_sig})"
+
+def _get_all_subtrees(root_node) -> List[str]:
+    subtrees = []
+    stack = [root_node]
+
+    while stack:
+        node = stack.pop()
+        if node.type == "comment":
+            continue
+
+        subtrees.append(_node_signature(node))  
+
+        for child in reversed(node.children):
+            if child.type != "comment":
+                stack.append(child)
+    return subtrees
 
 def _corpus_syntax_match_yaml(
     references: List[List[str]],
@@ -134,7 +159,6 @@ def _corpus_syntax_match_yaml(
 
     return match_count / total_count
 
-
 def calc_codebleu_yaml(
     references: Union[List[str], List[List[str]]],
     predictions: List[str],
@@ -153,8 +177,10 @@ def calc_codebleu_yaml(
     tokenized_hypotheses = [tokenizer(hypothesis) for hypothesis in hypotheses]
     tokenized_references = [[tokenizer(reference) for reference in reference_group] for reference_group in normalized_references]
 
+    # BLEU score
     ngram_match_score = bleu.corpus_bleu(tokenized_references, tokenized_hypotheses)
 
+    # Weighted N-gram Match score
     tokenized_references_with_weights = [
         [[reference_tokens, _build_keyword_weights(reference_tokens)] for reference_tokens in reference_group]
         for reference_group in tokenized_references
@@ -164,6 +190,7 @@ def calc_codebleu_yaml(
         tokenized_hypotheses,
     )
 
+    # Syntax Match score - AST 
     parser = build_yaml_parser()
     syntax_match_score = _corpus_syntax_match_yaml(normalized_references, hypotheses, parser)
 
@@ -184,6 +211,7 @@ def calc_codebleu_yaml(
         "syntax_match_score": syntax_match_score,
         "dataflow_match_score": dataflow_match_score,
     }
+
 
 
 def test(result_str="", reference_str=""):
