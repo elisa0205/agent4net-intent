@@ -1,9 +1,11 @@
 from typing import TypedDict
+from unittest import result
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils import load_prompt_config, create_llm, normalize_llm_content, write_yaml_to_file, extract_usage_tokens
 from utils import KindCluster
 from pathlib import Path
+from time import perf_counter
 
 import subprocess
 
@@ -17,7 +19,11 @@ class AgentState(TypedDict):
     generated_yaml: str
     yaml_path: str
     feedback: str
-    attempts: int
+    attempts: int 
+    consistency_fails: int
+    syntax_fails: int
+    k8s_fails: int
+    k8s_validator_time: float
     consistency: str
     temperature: float
     token_usage: int
@@ -59,7 +65,8 @@ def consistency_check(role: str):
         if response.strip() != "VALID":
             print(f"Prompt consistency check failed:\n{response}")
             return {"feedback": f"Consistency Error: {response}",
-                    "consistency": "INVALID"}
+                    "consistency": "INVALID",
+                    "consistency_fails": state.get("consistency_fails", 0) + 1}
 
         print("PASSED")
         return {"consistency": "VALID",
@@ -101,11 +108,11 @@ def generator_node(state: AgentState):
         #print(f"LLM metadata:\n{response}\n")
 
         response = normalize_llm_content(response.content)
-
-    
+        
     except (Exception) as e:
         print(f"LLM call failed:\n{e}")
         return {"feedback": "FAILED"}
+    
 
     attempt = state["attempts"] + 1
     #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response}\n--- End of YAML ---\n")
@@ -144,7 +151,8 @@ def syntax_validator_node(state: AgentState):
 
         print(f"--- Error detected---\n {error_message} ---")
         return {"feedback": f"Yamllint Error: {error_message}", 
-                "attempts": state['attempts']}
+                "attempts": state['attempts'],
+                "syntax_fails": state.get("syntax_fails", 0) + 1}
 
 
 def kubernetes_validator_node(state: AgentState):
@@ -154,25 +162,34 @@ def kubernetes_validator_node(state: AgentState):
     file_path = state['yaml_path']
 
     CLUSTER_CONFIG_PATH = BASE_DIR / "utils" / "cluster-config.yaml"
-
+    result = None
+    start = perf_counter()
     try:
         with KindCluster(config = CLUSTER_CONFIG_PATH) as kc:
             try:
                 kc.apply(file_path)
                 print("PASSED")
-                return {"feedback": "VALID",
-                        "attempts": state['attempts']}
+                result = {"feedback": "VALID",
+                          "attempts": state['attempts']}
         
             except subprocess.CalledProcessError as e:
                 # (getattr(e, "stdout", "") or "") + 
                 err = (getattr(e, "stderr", "") or "")
                 print(f"--- Error detected---\n {err} ---")
-                return {"feedback": f"Kubernetes Validation Error: {err}", 
-                        "attempts": state["attempts"]}
+                result = {"feedback": f"Kubernetes Validation Error: {err}", 
+                          "attempts": state["attempts"],
+                          "k8s_fails": state.get("k8s_fails", 0) + 1}
     
     except subprocess.CalledProcessError as e:
         err = (getattr(e, "stdout", "") or "") + (getattr(e, "stderr", "") or "")
-        return {"feedback": f"Kind Creation Error: {err}"}
+        result = {"feedback": f"Kind Creation Error: {err}"}
+
+    finally:
+        elapsed = perf_counter() - start
+        if result is not None:
+            result["k8s_validator_time"] = state.get("k8s_validator_time", 0.0) + elapsed
+
+    return result
 
 
 # Logic

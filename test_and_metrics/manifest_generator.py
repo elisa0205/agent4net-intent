@@ -9,7 +9,7 @@ CSV_PATH = Path("expanded-test.csv")
 
 
 
-def write_yaml_to_file(model_name: str, temperature: float, example_name: str, intent_model: str, iteration: int, attempts: int, yaml_content: str, token_usage: int):
+def write_yaml_to_file(model_name: str, temperature: float, example_name: str, intent_model: str, iteration: int, result: dict):
 
     if temperature is None:
         temperature = "default"
@@ -22,6 +22,8 @@ def write_yaml_to_file(model_name: str, temperature: float, example_name: str, i
     
     filename = os.path.join(RESULTS_DIR, f"{intent_model}_{iteration}.yaml")
 
+    yaml_content = result.get("generated_yaml", "")
+
     #correct from EOL to LF
     yaml_code = yaml_content.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
 
@@ -29,10 +31,10 @@ def write_yaml_to_file(model_name: str, temperature: float, example_name: str, i
     with open(filename, "w", encoding="utf-8", newline="\n") as f:
         f.write(yaml_code)
 
-    write_stats(model_name, temperature, example_name, intent_model, iteration, attempts, token_usage)
+    write_stats(model_name, temperature, example_name, intent_model, iteration, result)
 
 
-def write_stats(model_name: str, temperature: float, example_name: str, intent_model: str, iteration: int, attempts: int, token_usage: int):
+def write_stats(model_name: str, temperature: float, example_name: str, intent_model: str, iteration: int, result: dict):
 
     if temperature is None:
         temperature = "default"
@@ -45,11 +47,24 @@ def write_stats(model_name: str, temperature: float, example_name: str, intent_m
     
     stats_file = os.path.join(RESULTS_DIR, f"{intent_model}_{iteration}.stats")
 
+    attempts = result.get("attempts", 0)
+    token_usage = result.get("token_usage", 0)
+    elapsed_time = result.get("elapsed_time", 0.0)
+    consistency_fails = result.get("consistency_fails", 0)
+    syntax_fails = result.get("syntax_fails", 0)
+    k8s_fails = result.get("k8s_fails", 0)
+    k8s_validator_time = result.get("k8s_validator_time", 0.0)
+
     with open(stats_file, "w", encoding="utf-8") as f:
         f.write(f"model_name: {model_name}\n")
         f.write(f"temperature: {temperature}\n")
         f.write(f"attempts: {attempts}\n")
+        f.write(f"consistency_fails: {consistency_fails}\n")
+        f.write(f"syntax_fails: {syntax_fails}\n")
+        f.write(f"k8s_fails: {k8s_fails}\n")
         f.write(f"token_usage: {token_usage}\n")
+        f.write(f"elapsed_time: {elapsed_time} s\n")
+        f.write(f"k8s_validator_time: {k8s_validator_time} s\n")
 
 #Load intents from the CSV file and group them by example name and model
 def load_intents(csv_path: Path) -> dict[str, list[str]]:
@@ -89,7 +104,7 @@ def generate_manifest(task, model_name, temperature):
 
 if __name__ == "__main__":
     
-    model_name = "watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8"
+    model_name = "watsonx/ibm/granite-4-h-small"
     temperature = 0.7 # default temperature 0.7
 
     intents = load_intents(CSV_PATH)
@@ -100,10 +115,7 @@ if __name__ == "__main__":
             iteration += 1
             result = generate_manifest(task, model_name, temperature)
             if result is not None:
-                yaml_content = result.get("generated_yaml", "")
-                attempts = result.get("attempts", 0)
-                token_usage = result.get("token_usage", 0)
-                write_yaml_to_file(model_name, temperature, example, model, iteration, attempts, yaml_content, token_usage)
+                write_yaml_to_file(model_name, temperature, example, model, iteration, result)
 
 
 
