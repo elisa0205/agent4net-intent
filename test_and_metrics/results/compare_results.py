@@ -3,8 +3,6 @@ import csv
 from collections import defaultdict
 from pathlib import Path
 
-CSV_PATH = Path("expanded-dataset(in).csv")
-
 
 def load_matrix(filepath: str) -> list[list[float]]:
     path = Path(filepath)
@@ -63,29 +61,6 @@ def minor_pairs(matrix: list[list[float]], minor_n: int) -> list[tuple[float, in
 
     return sorted((-neg, i, j) for neg, i, j in heap)
 
-#Load intents from the CSV file and group them by example name and model
-def load_intents(csv_path: Path) -> dict[str, list[str]]:
-    grouped = defaultdict(list)
-
-    with csv_path.open("r", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            example_name = row["example"].strip()
-            intent_text = row["text"].strip()
-            model_name = row["model"].strip()
-            grouped[(example_name, model_name)].append(intent_text)
-    return dict(grouped)
-
-def extract_example_name(filename: str) -> str:
-    # es. "db-cronjob-example_jaccard_matrix.txt" -> "db-cronjob-example"
-    for suffix in ("_jaccard_matrix", "_sentence_transformer_matrix"):
-        if suffix in filename:
-            return filename.split(suffix)[0]
-    return filename
-
-def extract_top_intents(top_file: Path, csv_file: Path):
-    intents = load_intents(CSV_PATH)
-    print(intents)
 
 def main():
     BASE = Path(__file__).parent
