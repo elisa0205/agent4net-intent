@@ -1,9 +1,11 @@
 import numpy as np
 import csv
 import argparse
+import re
 from pathlib import Path
 from collections import defaultdict
 from sentence_transformers import SentenceTransformer
+
 
 CSV_PATH = Path("expanded-dataset(in).csv")
 RESULTS_DIR = Path("test_and_metrics/results")
@@ -11,7 +13,8 @@ RESULTS_DIR = Path("test_and_metrics/results")
 
 #Simple tokenization to compute similarity 
 def tokenize(text):
-    return set(text.lower().split())
+    tokens = re.findall(r"[a-zA-Z0-9']+", text.lower())
+    return set(tokens)
 
 #Jaccard similarity between two sets of tokens
 def jaccard(a, b):
