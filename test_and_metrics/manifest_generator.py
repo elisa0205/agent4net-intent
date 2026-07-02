@@ -5,7 +5,8 @@ from pathlib import Path
 from collections import defaultdict
 
 #CSV_PATH = Path("expanded-dataset(in).csv")
-CSV_PATH = Path("expanded-test.csv")
+#CSV_PATH = Path("expanded-test.csv")
+CSV_PATH = Path("benchmark-dataset.csv")
 
 
 
@@ -47,6 +48,7 @@ def write_stats(model_name: str, temperature: float, example_name: str, intent_m
     
     stats_file = os.path.join(RESULTS_DIR, f"{intent_model}_{iteration}.stats")
 
+    consistency = result.get("consistency", "")
     attempts = result.get("attempts", 0)
     token_usage = result.get("token_usage", 0)
     elapsed_time = result.get("elapsed_time", 0.0)
@@ -58,6 +60,7 @@ def write_stats(model_name: str, temperature: float, example_name: str, intent_m
     with open(stats_file, "w", encoding="utf-8") as f:
         f.write(f"model_name: {model_name}\n")
         f.write(f"temperature: {temperature}\n")
+        f.write(f"consistency: {consistency}\n")
         f.write(f"attempts: {attempts}\n")
         f.write(f"consistency_fails: {consistency_fails}\n")
         f.write(f"syntax_fails: {syntax_fails}\n")
@@ -115,7 +118,10 @@ if __name__ == "__main__":
             iteration += 1
             result = generate_manifest(task, model_name, temperature)
             if result is not None:
-                write_yaml_to_file(model_name, temperature, example, model, iteration, result)
+                if result.get("consistency", "") == "INVALID" or result.get("attempts", 0) > 6:
+                    write_stats(model_name, temperature, example, model, iteration, result)
+                else:
+                    write_yaml_to_file(model_name, temperature, example, model, iteration, result)
 
 
 

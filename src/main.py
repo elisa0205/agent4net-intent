@@ -46,12 +46,6 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
         final_state = agent_app.invoke(input)
 
         elapsed_sec = perf_counter() - start_time
-        feedback = final_state.get("feedback", "")
-
-        if feedback.startswith("FAILED"):
-            raise HTTPException(status_code=400, detail=feedback)
-        elif final_state.get("consistency", "") == "INVALID":
-            raise HTTPException(status_code=400, detail="Consistency check failed: " + feedback)
 
         return AgentResponse(
             generated_yaml=final_state.get("generated_yaml", ""),
