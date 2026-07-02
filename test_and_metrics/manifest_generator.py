@@ -118,7 +118,8 @@ if __name__ == "__main__":
             iteration += 1
             result = generate_manifest(task, model_name, temperature)
             if result is not None:
-                if result.get("consistency", "") == "INVALID" or result.get("attempts", 0) > 6:
+                if (result.get("consistency", "") == "INVALID" or 
+                    result.get("attempts", 0) == result.get("consistency_fails", 0) + result.get("syntax_fails", 0) + result.get("k8s_fails", 0)):
                     write_stats(model_name, temperature, example, model, iteration, result)
                 else:
                     write_yaml_to_file(model_name, temperature, example, model, iteration, result)
