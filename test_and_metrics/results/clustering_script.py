@@ -103,7 +103,7 @@ if __name__ == "__main__":
     labels, chosen_k = cluster_similarity_matrix(matrix, k=None, k_min=2, k_max=5)
     ranked_clusters = cluster_stats(matrix, labels)
 
-    print("Cluster ranking:")
+    print("\nCluster ranking:")
     for rank, (cluster_id, info) in enumerate(ranked_clusters, start=1):
         print(f"\nRank {rank} - cluster {cluster_id}")
         print(f"Size: {info['size']}")
