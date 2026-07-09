@@ -1,10 +1,12 @@
 from pathlib import Path
-from metrics import bleu, codeBleu, edit_distance, exact_match, kv_match, kv_wildcard, label_match
+from metrics import bleu, codeBleu, edit_distance, exact_match, kv_match, kv_wildcard, key_match
 from collections import defaultdict
 import yaml
 
-GENERATED_PATH = Path("results/llama-4-maverick-17b-128e-instruct-fp8/temp_0.7/stateless-app/gpt-oss-120b_1_attempt_1.yaml")
-REFERENCE_PATH = Path("configuration_examples/stateless-app/complete.yaml")
+from test_and_metrics.metrics import key_match
+
+GENERATED_PATH = Path("test1-results/gpt-oss-120b/temp_0.7/prod-dev-example/gpt-oss-120b_2.yaml")
+REFERENCE_PATH = Path("configuration_examples/prod-dev-example/complete.yaml")
 
 '''
 RESULTS:
@@ -12,7 +14,7 @@ RESULTS:
   codeBLEU score: 0.6934
   Edit Distance score: 0.6222
   Exact Match score: False
-  Label Match score: 0.9655
+  Key Match score: 0.9655
   KV Match score: 0.6552
   KV Wildcard score: 0.8966
 '''
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     code_bleu_score = 0.0
     edit_distance_score = 0.0
     exact_match_score = True
-    label_match_score = 0.0
+    key_match_score = 0.0
     kv_match_score = 0.0
     kv_wildcard_score = 0.0
 
@@ -72,11 +74,11 @@ if __name__ == "__main__":
       if not exact_match.test(generated_group, reference_group):
           exact_match_score = False
 
-      label_match_score += label_match.test(generated_group, reference_group)
+      key_match_score += key_match.test(generated_group, reference_group)
       kv_match_score += kv_match.test(generated_group, reference_group)
       kv_wildcard_score += kv_wildcard.test(generated_group, reference_group)
 
-      #print(bleu_score, code_bleu_score, edit_distance_score, exact_match_score, label_match_score, kv_match_score, kv_wildcard_score)
+      #print(bleu_score, code_bleu_score, edit_distance_score, exact_match_score, key_match_score, kv_match_score, kv_wildcard_score)
 
 
     # Total scores across all kinds
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     print(f"CodeBLEU score: {code_bleu_score/num_kinds:.4f}")
     print(f"Edit Distance score: {edit_distance_score/num_kinds:.4f}")
     print(f"Exact Match score: {exact_match_score}")
-    print(f"Label Match score: {label_match_score/num_kinds:.4f}")
+    print(f"Key Match score: {key_match_score/num_kinds:.4f}")
     print(f"KV Match score: {kv_match_score/num_kinds:.4f}")
     print(f"KV Wildcard score: {kv_wildcard_score/num_kinds:.4f}")
 
