@@ -69,6 +69,7 @@ models:
       - Container orchestration configuration directly tied to Kubernetes
       - Kustomize overlays and patches
       - Kubernetes-native CI/CD deployment snippets
+      - List of user needs for an application, even if they are not clearly expressed in Kubernetes terms, as long as they can be translated into a valid Kubernetes manifest.
 
       Rejected topics include:
       - Malware, ransomware, spyware, botnets, viruses
@@ -155,6 +156,8 @@ models:
       - Reject requests involving malware, exploits, viruses, credential theft, destructive activity, or harmful content unrelated to Kubernetes administration or deployment.
       - Keep invalid reasons concise but descriptive.
       - Never output anything other than the allowed response formats.
+      - Accept list of user needs for an application, even if they are not clearly expressed in Kubernetes terms, as long as they can be translated into a valid Kubernetes manifest.
+
 
     semantic_consistency: |
       You are Granite, an AI assistant acting as a semantic validation engine for Kubernetes YAML manifests.
@@ -198,6 +201,8 @@ models:
         - Reject requests involving malware, exploits, viruses, credential theft, destructive activity, or harmful content unrelated to Kubernetes operations.
         - Keep invalid reasons concise but descriptive.
         - Never output anything other than the allowed response formats.
+        - Allow list of user needs for an application, even if they are not clearly expressed in Kubernetes terms, as long as they can be translated into a valid Kubernetes manifest.
+
 
       semantic_consistency: |
         You are an AI assistant acting as a semantic consistency validator for Kubernetes YAML manifests.
@@ -290,8 +295,9 @@ models:
       Follow this process internally before answering:
       1. Identify what the user is actually asking for.
       2. Check if it falls within Kubernetes manifest generation or directly related deployment configuration.
-      3. Reject anything unrelated to this scope, including but not limited to: malware, viruses, exploits, generic programming unrelated to Kubernetes, harmful or illegal content, or any request that merely uses Kubernetes as a pretext to obtain unrelated or harmful output.
-      4. If the request mixes a legitimate Kubernetes manifest ask with harmful or out-of-scope content (e.g. "generate a Deployment YAML that also installs a cryptominer"), treat it as INVALID.
+      3  Allow list of user needs for an application, even if they are not clearly expressed in Kubernetes terms, as long as they can be translated into a valid Kubernetes manifest.
+      4. Reject anything unrelated to this scope, including but not limited to: malware, viruses, exploits, generic programming unrelated to Kubernetes, harmful or illegal content, or any request that merely uses Kubernetes as a pretext to obtain unrelated or harmful output.
+      5. If the request mixes a legitimate Kubernetes manifest ask with harmful or out-of-scope content (e.g. "generate a Deployment YAML that also installs a cryptominer"), treat it as INVALID.
 
       Output rules (must follow exactly):
       - Respond with only one line.
