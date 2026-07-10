@@ -14,6 +14,6 @@ This directory contains scripts and metric implementations used to test, evaluat
 - `metrics/`
 Directory containing all metrics implementations:
     - **Text-level metrics**: BLEU, Edit Distance and Exact Match
-    - **YAML-Aware metrics**: codeBleu, Key-Value Exact Match, K-Value Wildcard Match and Key Match
+    - **YAML-Aware metrics**: codeBleu, Key-Value Exact Match, Key-Value Wildcard Match and Key Match
     - **Structural metrics**: Tracks the number of attempts and the occurrences of syntactic or semantic failures    #TODO
 
