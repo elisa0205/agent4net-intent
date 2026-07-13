@@ -6,7 +6,7 @@ from collections import defaultdict
 
 #CSV_PATH = Path("expanded-dataset(in).csv")
 #CSV_PATH = Path("expanded-test.csv")
-CSV_PATH = Path("benchmark-dataset.csv")
+CSV_PATH = Path("test1-dataset.csv")
 
 
 
@@ -18,7 +18,7 @@ def write_yaml_to_file(model_name: str, temperature: float, example_name: str, i
     model_name = model_name.rsplit("/", 1)[-1]
     intent_model = intent_model.rsplit("/", 1)[-1]
 
-    RESULTS_DIR = Path("results") / model_name / f"temp_{temperature}" / example_name
+    RESULTS_DIR = Path("test1-results") / model_name / f"temp_{temperature}" / example_name
     os.makedirs(RESULTS_DIR, exist_ok=True)
     
     filename = os.path.join(RESULTS_DIR, f"{intent_model}_{iteration}.yaml")
@@ -43,7 +43,7 @@ def write_stats(model_name: str, temperature: float, example_name: str, intent_m
     model_name = model_name.rsplit("/", 1)[-1]
     intent_model = intent_model.rsplit("/", 1)[-1]
 
-    RESULTS_DIR = Path("results") / model_name / f"temp_{temperature}" / example_name
+    RESULTS_DIR = Path("test1-results") / model_name / f"temp_{temperature}" / example_name
     os.makedirs(RESULTS_DIR, exist_ok=True)
     
     stats_file = os.path.join(RESULTS_DIR, f"{intent_model}_{iteration}.stats")
@@ -108,7 +108,7 @@ def generate_manifest(task, model_name, temperature):
 if __name__ == "__main__":
     
     model_name = "watsonx/ibm/granite-4-h-small"
-    temperature = 0.7 # default temperature 0.7
+    temperature = 1.4 # default temperature 0.7
 
     intents = load_intents(CSV_PATH)
     

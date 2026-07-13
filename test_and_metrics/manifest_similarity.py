@@ -3,10 +3,8 @@ from metrics import bleu, codeBleu, edit_distance, exact_match, kv_match, kv_wil
 from collections import defaultdict
 import yaml
 
-from test_and_metrics.metrics import key_match
-
-GENERATED_PATH = Path("test1-results/gpt-oss-120b/temp_0.7/prod-dev-example/gpt-oss-120b_2.yaml")
-REFERENCE_PATH = Path("configuration_examples/prod-dev-example/complete.yaml")
+GENERATED_PATH = Path("test1-simple-results/granite-4-h-small/temp_0.7/stateless-app/gpt-oss-120b_1.yaml")
+REFERENCE_PATH = Path("configuration_examples/stateless-app/complete.yaml")
 
 '''
 RESULTS:
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     bleu_score = 0.0
     code_bleu_score = 0.0
     edit_distance_score = 0.0
-    exact_match_score = True
+    exact_match_score = 1
     key_match_score = 0.0
     kv_match_score = 0.0
     kv_wildcard_score = 0.0
@@ -72,7 +70,7 @@ if __name__ == "__main__":
       edit_distance_score += edit_distance.test(generated_group, reference_group)
 
       if not exact_match.test(generated_group, reference_group):
-          exact_match_score = False
+          exact_match_score = 0
 
       key_match_score += key_match.test(generated_group, reference_group)
       kv_match_score += kv_match.test(generated_group, reference_group)
