@@ -99,48 +99,60 @@ semantic_consistency_node = consistency_check("semantic")
 def generator_node(state: AgentState):
     """Generate or fix YAML based on the task and feedback"""
 
-    llm = create_llm(state["model_name"], state["temperature"])
+    if(state["user_override"] == "manual_edit"):
+        print("\nUser provided manual YAML, skipping generation")
 
-    prompt = f"Task: {state['task']}\n"
-    system_prompt = prompt_config["models"][state['model_name']]["generator"]
-
-    if state['feedback']:
-        #Limit the feedback to the last 500 characters to avoid hitting token limits
-        #feedback_snippet = state['feedback'][-500:]
-        feedback_snippet = state['feedback']
-        
-        prompt += f"Previous error to fix (Keep the existing valid manifest as much as possible, but remove the field flagged by the validator; do not reintroduce unsupported fields; return only the final YAML): {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+        return {
+            "generated_yaml": state["manual_feedback"],
+            "yaml_path": state["yaml_path"],
+            "attempts": state["attempts"],
+            "token_usage": state["token_usage"],
+            "user_override": False,
+        }
     
-    message = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=prompt)
-    ]
+    else:
+        llm = create_llm(state["model_name"], state["temperature"])
+
+        prompt = f"Task: {state['task']}\n"
+        system_prompt = prompt_config["models"][state['model_name']]["generator"]
+
+        if state['feedback']:
+            #Limit the feedback to the last 500 characters to avoid hitting token limits
+            #feedback_snippet = state['feedback'][-500:]
+            feedback_snippet = state['feedback']
+            
+            prompt += f"Previous error to fix (Keep the existing valid manifest as much as possible, but remove the field flagged by the validator; do not reintroduce unsupported fields; return only the final YAML): {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
         
-    print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
-    #print(f"prompt: {message}\n ")
+        message = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=prompt)
+        ]
+            
+        print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
+        #print(f"prompt: {message}\n ")
 
-    try:
-        response = llm.invoke(message)
-        #print(f"LLM response:\n{response}\n")
-        tokens = state["token_usage"] + extract_usage_tokens(response)
-        #print(f"LLM metadata:\n{response}\n")
+        try:
+            response = llm.invoke(message)
+            #print(f"LLM response:\n{response}\n")
+            tokens = state["token_usage"] + extract_usage_tokens(response)
+            #print(f"LLM metadata:\n{response}\n")
 
-        response = normalize_llm_content(response.content)
+            response = normalize_llm_content(response.content)
+            
+        except (Exception) as e:
+            print(f"LLM call failed:\n{e}")
+            return {"feedback": "FAILED"}
         
-    except (Exception) as e:
-        print(f"LLM call failed:\n{e}")
-        return {"feedback": "FAILED"}
-    
 
-    attempt = state["attempts"] + 1
-    #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response}\n--- End of YAML ---\n")
-    
-    file_path = write_yaml_to_file(response, attempt)
+        attempt = state["attempts"] + 1
+        #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response}\n--- End of YAML ---\n")
+        
+        file_path = write_yaml_to_file(response, attempt)
 
-    return {"generated_yaml": response, 
-            "yaml_path": file_path,
-            "attempts": attempt,
-            "token_usage": tokens}
+        return {"generated_yaml": response, 
+                "yaml_path": file_path,
+                "attempts": attempt,
+                "token_usage": tokens}
 
 
 def syntax_validator_node(state: AgentState):
@@ -232,7 +244,6 @@ def kubernetes_validator_node(state: AgentState):
             result["k8s_validator_time"] = state.get("k8s_validator_time", 0.0) + elapsed
 
     return result
-
 
 
 def user_intervention_node(state: AgentState):
