@@ -3,6 +3,7 @@ from litellm import Usage
 import yaml
 from functools import lru_cache
 from langchain_litellm import ChatLiteLLM
+import re
 
 # From generated agent text to file 
 def write_yaml_to_file(yaml_content: str, attempt: int) -> str:
@@ -92,3 +93,28 @@ def extract_usage_tokens(response):
         return meta.total_tokens
     return meta.get('total_tokens')
 
+
+def normalize_error(error_message: str) -> str:
+    """
+    Normalizza un messaggio di errore rimuovendo i riferimenti a path/file
+    (es. '..\\results_temp\\config_attempt_5.yaml') così che due errori
+    identici tranne che per il nome del file di tentativo vengano
+    considerati uguali.
+    """
+    if not error_message:
+        return error_message
+
+    normalized = error_message
+
+    # uniforma i separatori di path (windows/posix)
+    normalized = normalized.replace("\\\\", "\\").replace("\\", "/")
+
+    # rimuove qualunque token tipo path che termina con .yaml/.yml/.json
+    normalized = re.sub(
+        r'[^\s"\']*\.(?:ya?ml|json)\b',
+        "<FILE>",
+        normalized,
+        flags=re.IGNORECASE,
+    )
+
+    return normalized
