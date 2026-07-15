@@ -91,7 +91,11 @@ def generator_node(state: AgentState):
         #feedback_snippet = state['feedback'][-500:]
         feedback_snippet = state['feedback']
         
-        prompt += f"Previous error to fix: {feedback_snippet}\n YAML to correct: {state['generated_yaml']}"
+        prompt += (
+            f"YAML to correct: {state['generated_yaml']}"
+            f"Previous error to fix : {feedback_snippet}" 
+            "Correction rules: Keep the existing valid manifest as much as possible and fix ONLY what the validator flagged, using the minimum set of corrections needed to resolve this error."
+        )
     
     message = [
         SystemMessage(content=system_prompt),
