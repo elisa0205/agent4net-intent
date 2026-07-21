@@ -294,8 +294,7 @@ def generate_errorbar_plots(rows: list[dict[str, float | str | int]], output_plo
     for title, mean_key, std_key, color, suffix in metrics:
         means = [float(row[mean_key]) for row in rows]
         errors = [float(row[std_key]) for row in rows]
-        print(f"Generating error bar plot for {title}: means={means}, errors={errors}")
-
+        
         fig, ax = plt.subplots(figsize=(10, 12), constrained_layout=True)
         
         ax.bar(
