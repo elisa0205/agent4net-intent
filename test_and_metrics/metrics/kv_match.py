@@ -33,10 +33,12 @@ def test(result_str="", reference_str=""):
     except:
         print(f"Invalid reference code:\n{reference_str}")
         return 0.0
-    
-    if len(list(yaml_dict_list1)) != len(list(yaml_dict_list2)):
-        print(f"Number of documents differ: {len(list(yaml_dict_list1))} vs {len(list(yaml_dict_list2))}")
-        return 0.0
+
+    diff_len = len(yaml_dict_list1) - len(yaml_dict_list2)
+    if diff_len > 0:
+        yaml_dict_list2 += [{} for _ in range(diff_len)]
+    elif diff_len < 0:
+        yaml_dict_list1 += [{} for _ in range(abs(diff_len))]
 
     total_diff_items = 0
     
