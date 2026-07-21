@@ -8,14 +8,19 @@ GENERATED_ROOT = Path("test1-results")
 REFERENCE_ROOT = Path("configuration_examples")
 
 '''
-RESULTS:
-  BLEU score: 0.8635
-  codeBLEU score: 0.6934
-  Edit Distance score: 0.6222
-  Exact Match score: False
-  Key Match score: 0.9655
-  KV Match score: 0.6552
-  KV Wildcard score: 0.8966
+RESULTS ex:
+    BLEU: 0.4143
+    CodeBLEU: 0.5288
+    Edit_Distance: 0.5820
+    Exact_Match: 0
+    Key_Match: 0.9975
+    KV_Match: 0.7577
+    KV_Wildcard: 0.9593
+    Matched kinds: 7
+    Kind_Precision: 0.8750
+    Kind_Recall: 1.0000
+    Extra_Kinds: Pod
+    Missing_Kinds: -
 '''
 
 def load_documents(path: Path):
@@ -77,7 +82,6 @@ def format_report(
     lines = [
         f"Generated file: {generated_path}",
         f"Reference file: {reference_path}",
-        f"Matched kinds: {num_kinds}",
         f"BLEU: {metrics['bleu_score']:.4f}",
         f"CodeBLEU: {metrics['code_bleu_score']:.4f}",
         f"Edit_Distance: {metrics['edit_distance_score']:.4f}",
@@ -85,6 +89,7 @@ def format_report(
         f"Key_Match: {metrics['key_match_score']:.4f}",
         f"KV_Match: {metrics['kv_match_score']:.4f}",
         f"KV_Wildcard: {metrics['kv_wildcard_score']:.4f}",
+        f"Matched kinds: {num_kinds}",
         f"Kind_Precision: {kind_metrics['kind_precision']:.4f}",
         f"Kind_Recall: {kind_metrics['kind_recall']:.4f}",
         f"Extra_Kinds: {', '.join(kind_metrics['extra_kinds']) or '-'}",
