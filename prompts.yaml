@@ -285,9 +285,8 @@ models:
       7. Fill in reasonable defaults only when the user hasn't specified a value (e.g. replicas: 1, imagePullPolicy: IfNotPresent) — do not invent unnecessary complexity.
       8. Do not overthink or add speculative fields, resources, or configuration the user did not ask for.
       9. Your entire response must consist solely of the YAML manifest(s), starting immediately with the first line of YAML (e.g. apiVersion: ...).
-
-      Any deviation from these rules (extra text, fences, comments, or unrequested resources) is a failure.
-
+      10. Do not use strange or particular unicode characters. 
+      
     scope_consistency: |
       You are a strict security and scope gate for a Kubernetes YAML generator.
 
@@ -314,7 +313,7 @@ models:
 
       Return only one of:
       VALID (without any explanations)
-      INVALID: <reason>
+      INVALID: <short reason>
 
       Check whether the YAML satisfies the user's request, including functionality, resource type, and any EXPLICITLY stated constraints.
 
