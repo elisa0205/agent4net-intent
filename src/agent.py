@@ -1,5 +1,4 @@
 from typing import TypedDict
-from unittest import result
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage, HumanMessage
 from utils import load_prompt_config, create_llm, normalize_llm_content, write_yaml_to_file, extract_usage_tokens
@@ -28,7 +27,7 @@ class AgentState(TypedDict):
     temperature: float
     token_usage: int
 
-prompt_config = load_prompt_config(BASE_DIR / ".." / "prompts.yaml")
+prompt_config = load_prompt_config(BASE_DIR.parent / "prompts.yaml")
 
 # Nodes 
 def consistency_check(role: str):
@@ -56,9 +55,7 @@ def consistency_check(role: str):
         print(f"\nConsistency check for the prompt's {role}")
 
         response = llm.invoke(message)
-        #print(response)
         tokens = state["token_usage"] + extract_usage_tokens(response)
-        #print(f"Token usage:{response.usage_metadata['total_tokens']}\n")
 
         response = normalize_llm_content(response.content)
 
@@ -87,8 +84,6 @@ def generator_node(state: AgentState):
     system_prompt = prompt_config["models"][state['model_name']]["generator"]
 
     if state['feedback']:
-        #Limit the feedback to the last 500 characters to avoid hitting token limits
-        #feedback_snippet = state['feedback'][-500:]
         feedback_snippet = state['feedback']
         
         prompt += (
@@ -103,24 +98,20 @@ def generator_node(state: AgentState):
     ]
         
     print(f"\nCall the LLM: attempt {state['attempts'] + 1}\n")
-    #print(f"prompt: {message}\n ")
 
     try:
         response = llm.invoke(message)
-        #print(f"LLM response:\n{response}\n")
         tokens = state["token_usage"] + extract_usage_tokens(response)
-        #print(f"LLM metadata:\n{response}\n")
 
         response = normalize_llm_content(response.content)
-        
+
     except (Exception) as e:
         print(f"LLM call failed:\n{e}")
         return {"feedback": "FAILED"}
-    
+
 
     attempt = state["attempts"] + 1
-    #print(f"\n --- Generated YAML (attempt {attempt}): ---\n{response}\n--- End of YAML ---\n")
-    
+
     file_path = write_yaml_to_file(response, attempt)
 
     return {"generated_yaml": response, 
@@ -138,7 +129,7 @@ def syntax_validator_node(state: AgentState):
     # parsable is needed because in this way the output is machine-readable 
     result = subprocess.run(
         ["yamllint",
-         "-c", "..\yamllint_config.yaml",
+         "-c", str(BASE_DIR.parent / "yamllint_config.yaml"),
          "-f", "parsable", file_path],
         capture_output=True,
         text=True
@@ -177,7 +168,6 @@ def kubernetes_validator_node(state: AgentState):
                           "attempts": state['attempts']}
         
             except subprocess.CalledProcessError as e:
-                # (getattr(e, "stdout", "") or "") + 
                 err = (getattr(e, "stderr", "") or "")
                 print(f"--- Error detected---\n {err} ---")
                 result = {"feedback": f"Kubernetes Validation Error: {err}", 
