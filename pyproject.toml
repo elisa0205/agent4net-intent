@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent4net-intent"
+version = "1.0.0"
+description = "Agentic framework for intent-driven Kubernetes manifest generation with iterative validation (companion code)"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "The agent4net-intent authors" }]
+requires-python = ">=3.10"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+]
+dependencies = [
+    "langchain",
+    "langchain-core",
+    "langchain-litellm",
+    # litellm is pinned below 1.82.7 for compatibility with the evaluation setup.
+    "litellm<1.82.7",
+    "langchain-ollama",
+    "langgraph",
+    "yamllint",
+    "python-dotenv",
+    "pyyaml",
+    "fastapi[standard]",
+]
+
+[project.urls]
+Repository = "https://github.com/elisa0205/agent4net-intent"
+Dataset = "https://huggingface.co/datasets/elisa0205/kubernetes-configurations"
+
+[tool.setuptools]
+# This repository is an application run from source (see README):
+# installing it provides the dependencies above, not an importable package.
+packages = []

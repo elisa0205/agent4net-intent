@@ -8,11 +8,11 @@ Each directory additionally contains the intent produced by the LLM in response 
 
 ###  📁 stateless-app
 Minimal example of a stateless application.
-Shows gthe basic case of an application using a Deployment and a Service.
+Shows the basic case of an application using a Deployment and a Service.
 
 ###  📁 stateful-app
 Example of a simpler stateful application.
-Shows how to persist database data using a PersistenVolume object.
+Shows how to persist database data using a PersistentVolume object.
 
 ###  📁 secure-stateful-app
 Example of a secure stateful application.

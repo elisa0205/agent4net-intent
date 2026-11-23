@@ -1,15 +1,22 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from agent import app as agent_app
 from time import perf_counter
 
-app = FastAPI() 
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+from agent import app as agent_app
+
+load_dotenv()
+
+app = FastAPI()
+
 
 # Request Model
 class AgentRequest(BaseModel):
     task: str
     model_name: str
-    temperature: float = 0.7 #default temperature 0.7
+    temperature: float = 0.7  # default temperature 0.7
+
 
 # Response Model
 class AgentResponse(BaseModel):
@@ -22,8 +29,9 @@ class AgentResponse(BaseModel):
     feedback: str
     consistency: str
     token_usage: int
-    elapsed_time: float #seconds
-    k8s_validator_time: float #seconds
+    elapsed_time: float  # seconds
+    k8s_validator_time: float  # seconds
+
 
 @app.post("/manifest")
 async def generate_yaml(request: AgentRequest) -> AgentResponse:
@@ -42,7 +50,7 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
 
     try:
         start_time = perf_counter()
-        
+
         final_state = agent_app.invoke(input)
 
         elapsed_sec = perf_counter() - start_time
@@ -60,8 +68,8 @@ async def generate_yaml(request: AgentRequest) -> AgentResponse:
             elapsed_time=elapsed_sec,
             k8s_validator_time=final_state.get("k8s_validator_time", 0.0)
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Agent execution failed: {e}")

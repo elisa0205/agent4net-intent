@@ -1,12 +1,9 @@
-import requests
+import argparse
 import csv
 import os
+import requests
 from pathlib import Path
 from collections import defaultdict
-
-#CSV_PATH = Path("expanded-dataset(in).csv")
-#CSV_PATH = Path("expanded-test.csv")
-CSV_PATH = Path("test1-dataset.csv")
 
 
 
@@ -82,9 +79,7 @@ def load_intents(csv_path: Path) -> dict[str, list[str]]:
             grouped[(example_name, model_name)].append(intent_text)
     return dict(grouped)
 
-def generate_manifest(task, model_name, temperature):
-    url = "http://127.0.0.1:8000/manifest"
-
+def generate_manifest(task, model_name, temperature, url):
     payload = {
         "task": task,
         "model_name": model_name,
@@ -106,23 +101,31 @@ def generate_manifest(task, model_name, temperature):
 
 
 if __name__ == "__main__":
-    
-    model_name = "watsonx/ibm/granite-4-h-small"
-    temperature = 1.4 # default temperature 0.7
 
-    intents = load_intents(CSV_PATH)
-    
+    parser = argparse.ArgumentParser(
+        description="Run the manifest-generation agent over a dataset of intents. "
+                    "Requires the FastAPI service (src/main.py) to be running.")
+    parser.add_argument("--csv", type=Path, default=Path("test1-dataset.csv"),
+                        help="CSV of intents with columns: example, text, model")
+    parser.add_argument("--model", default="watsonx/ibm/granite-4-h-small",
+                        help="model name in LiteLLM format (e.g. watsonx/... or ollama/...)")
+    parser.add_argument("--temperature", type=float, default=0.7)
+    parser.add_argument("--api-url", default="http://127.0.0.1:8000/manifest")
+    args = parser.parse_args()
+
+    intents = load_intents(args.csv)
+
     for (example, model), tasks in intents.items():
         iteration = 0
         for task in tasks:
             iteration += 1
-            result = generate_manifest(task, model_name, temperature)
+            result = generate_manifest(task, args.model, args.temperature, args.api_url)
             if result is not None:
-                if (result.get("consistency", "") == "INVALID" or 
+                if (result.get("consistency", "") == "INVALID" or
                     result.get("attempts", 0) == result.get("consistency_fails", 0) + result.get("syntax_fails", 0) + result.get("k8s_fails", 0)):
-                    write_stats(model_name, temperature, example, model, iteration, result)
+                    write_stats(args.model, args.temperature, example, model, iteration, result)
                 else:
-                    write_yaml_to_file(model_name, temperature, example, model, iteration, result)
+                    write_yaml_to_file(args.model, args.temperature, example, model, iteration, result)
 
 
 
